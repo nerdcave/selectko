@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <script type="text/javascript" src="scripts/vendor/jquery-2.1.4.js"></script>
+  <script type="text/javascript" src="scripts/vendor/knockout-3.3.0.js"></script>
+
+  <script type="text/javascript" src="scripts/tokenlist.js"></script>
+  <link rel="stylesheet" type="text/css" href="css/tokenlist.css">
+
+  <style>
+    body {
+      background: #fcfcfc;
+      font-family: sans-serif;
+      color: #444;
+    }
+
+    #container {
+      width: 50%;
+    }
+
+  </style>
+
+  <script>
+    jQuery(function() { ko.applyBindings(); });
+  </script>
+
+</head>
+
+<body>
+  Demo and component by <a href="http://twitter.com/nerdcave">Jay Elaraj</a>.
+  Follow project on <a href="http://github.com/nerdcave/tokenlist">github</a>.
+
+  <h1>tokenlist component demo for knockout JS</h1>
+  <ul>
+    <li>Type something then press <b>enter</b>, <b>tab</b>, or <b>comma</b> to add it.
+    <li>Press <b>down</b> for autocomplete.</li>
+    <li>Type <b>ball</b>, for example, for autocomplete highlighting.</li>
+    <li>Press <b>up</b> or <b>escape</b> to close autocomplete.</li>
+    <li>Press <b>backspace</b> or click the <b>&times;</b> to delete a token.</li>
+  </ul>
+
+  <div id="container">
+    <!-- tokenlist component -->
+    <tokenlist params="formElement: '#tokens', autocompleteTokens:['basketball', 'football', 'tennis', 'cricket', 'volleyball', 'soccer', 'table tennis']"></tokenlist>
+
+    <br>
+    Form input:
+    <input id="tokens" type="text" value="tennis,hockey,baseball">
+  </div>
+
+</body>
+
+</html>
