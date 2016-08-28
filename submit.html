@@ -1,0 +1,21 @@
+<html>
+  <body>
+
+    Submitted:
+
+    <script>
+      var vars = window.location.search.substring(1).split('&');
+      if (vars[0] === '') {
+        document.write("None!");
+      } else {
+        document.write('<ol>');
+        for (var i = 0; i < vars.length; i++) {
+          var pair = vars[i].split('=');
+          document.write('<li>' + decodeURIComponent(pair[0]) + ': ' + decodeURIComponent(pair[1]) + '</li>');
+        }
+        document.write('</ol>');
+      }
+    </script>
+
+  </body>
+</html>

@@ -1,14 +1,12 @@
-.clearfix:before,
-.clearfix:after {
-  content: "";
-  display: table;
-} 
-.clearfix:after { clear: both; }
-.clearfix { zoom: 1; }
-
-.token-wrapper {
+.tokenlist-wrapper {
   position: relative;
 }
+
+.token-list:after {
+  content: "";
+  display: table;
+  clear: both;
+} 
 
 .token-list {
   font-family: sans-serif;
@@ -18,9 +16,10 @@
   list-style: none;
   padding: 0 0 5px 5px;
   margin: 0;
+  cursor: text;
 }
 
-ul.token-list li {
+ul.token-list > li {
   float: left;
   display: inline-block;
   padding: 3px 6px 5px 5px;
@@ -31,17 +30,18 @@ ul.token-list li {
   font-size: 15px;
 }
 
-ul.token-list li.token-input {
+ul.token-list > li.token-input {
   background: none;
   border: none;
   padding-left: 0;
 }
 
-ul.token-list li.token-input input {
+ul.token-list > li.token-input input {
   outline: none;
   border: 0;
-  font-size: 14px;
+  font-size: 1em;
   padding: 0; margin: 0;
+  box-shadow: none;
 }
 
 li.token a.token-close {
@@ -57,11 +57,14 @@ li.token a.token-close:hover {
 }
 
 ul.autocomplete {
+  position: absolute;
+  z-index: 2;
+  width: 100%;
   list-style: none;
   padding: 0;
-  position: absolute;
   border: 1px solid #555;
   background: #fff;
+  padding: 0; margin: 0;
 }
 
 ul.autocomplete li {
@@ -70,6 +73,15 @@ ul.autocomplete li {
 
 ul.autocomplete li.selected {
   background: #ddd;
+}
+
+ul.autocomplete li.highlight {
+  background: #5897fb;
+  cursor: pointer;
+}
+
+ul.autocomplete li.new-token {
+  font-style: italic;
 }
 
 ul.autocomplete span.autocomplete-search {

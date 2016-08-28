@@ -1,54 +1,100 @@
 <!DOCTYPE html>
 <html>
 
-<head>
-  <script type="text/javascript" src="scripts/vendor/jquery-2.1.4.js"></script>
-  <script type="text/javascript" src="scripts/vendor/knockout-3.3.0.js"></script>
+  <head>
+    <script type="text/javascript" src="scripts/vendor/knockout-3.4.0.js"></script>
 
-  <script type="text/javascript" src="scripts/tokenlist.js"></script>
-  <link rel="stylesheet" type="text/css" href="css/tokenlist.css">
+    <script type="text/javascript" src="scripts/tokenlist-1.0.0.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/tokenlist.css">
 
-  <style>
-    body {
-      background: #fcfcfc;
-      font-family: sans-serif;
-      color: #444;
-    }
+    <style>
+      body {
+        background: #fcfcfc;
+        font-family: sans-serif;
+        color: #444;
+        padding: 1em;
+      }
 
-    #container {
-      width: 50%;
-    }
+      #container { width: 50%; }
+      div.field {
+        border-bottom: 1px dotted #ccc;
+        padding-bottom: 20px;
+        margin-top: 30px;
+      }
 
-  </style>
+      button {
+        font-size: 16px;
+        padding: 8px;
+        margin-top: 5px;
+        background: #4CAF50;
+        color: #fff;
+      }
 
-  <script>
-    jQuery(function() { ko.applyBindings(); });
-  </script>
+    </style>
 
-</head>
+    <script>
+      var Thing = function(name) {
+        this.name = name;
+        this.id = "id_" + Math.round(Math.random() * 1000);
+      }
 
-<body>
-  Demo and component by <a href="http://twitter.com/nerdcave">Jay Elaraj</a>.
-  Follow project on <a href="http://github.com/nerdcave/tokenlist">github</a>.
+      function ViewModel() {
+        this.tokens = ko.observableArray(['basketball', 'football', 'tennis', 'cricket', 'volleyball', 'soccer', 'table tennis']);
+        this.things = ko.observableArray(ko.utils.arrayMap(this.tokens(), function(name) { return new Thing(name); }));
+        this.tags2SelectedValues = ko.observableArray([this.things()[4].name]);
+        this.tags3SelectedValues = ko.observableArray([this.things()[1].id, this.things()[2].id]);
+      }
+    </script>
 
-  <h1>tokenlist component demo for knockout JS</h1>
-  <ul>
-    <li>Type something then press <b>enter</b>, <b>tab</b>, or <b>comma</b> to add it.
-    <li>Press <b>down</b> for autocomplete.</li>
-    <li>Type <b>ball</b>, for example, for autocomplete highlighting.</li>
-    <li>Press <b>up</b> or <b>escape</b> to close autocomplete.</li>
-    <li>Press <b>backspace</b> or click the <b>&times;</b> to delete a token.</li>
-  </ul>
+  </head>
 
-  <div id="container">
-    <!-- tokenlist component -->
-    <tokenlist params="formElement: '#tokens', autocompleteTokens:['basketball', 'football', 'tennis', 'cricket', 'volleyball', 'soccer', 'table tennis']"></tokenlist>
+  <body>
+    Demo and component by <a href="http://nerdcave.com">Jay Elaraj</a>.
+    Follow project on <a href="http://github.com/nerdcave/tokenlist">github</a>.
 
-    <br>
-    Form input:
-    <input id="tokens" type="text" value="tennis,hockey,baseball">
-  </div>
+    <h1>tokenlist component demo for knockout JS</h1>
 
-</body>
+    <div id="container">
+      <form action="submit.html">
+        <div class="field">
+          Simplest:
+          <ul>
+            <li>Type something then press <b>enter</b>, <b>tab</b>, or <b>comma</b> to add it.
+            <li>Press <b>backspace</b> or click the <b>&times;</b> to delete a token.</li>
+          </ul>
+          <tokenlist params="name: 'tags1[]'"></tokenlist>
+        </div>
+
+        <div class="field">
+          Tokens as plain strings and disallow new entries:
+          <ul>
+            <li>Plain string tokens (see source).</li>
+            <li>For autocomplete filtering, type <b>ball</b>, for example.</li>
+            <li>Press <b>enter</b> to select an autocomplete item.</li>
+            <li>Press <b>up</b> or <b>escape</b> to close autocomplete. Press <b>down</b> to open autocomplete.</li>
+            <li>Adding a new entry (not in the autocomplete) is disabled with param <b>allowNew: false</b>.</li>
+          </ul>
+          <tokenlist params="name: 'tags2[]', tokens: tokens, allowNew: false, selectedValues: tags2SelectedValues"></tokenlist>
+        </div>
+
+        <div class="field">
+          Full features and tokens as objects:
+          <ul>
+            <li>Tokens are JavaScript objects (see source).</li>
+            <li>New entries allowed - type something then press <b>enter</b>, <b>tab</b>, or <b>comma</b> to add it.</li>
+            <li>New entry values formatted with <b>newValueFormat</b> option. Add new entries and press Submit to see results.</li>
+          </ul>
+          <tokenlist params="name: 'tags3[]', tokens: things, textField: 'name', valueField: 'id', selectedValues: tags3SelectedValues, newValueFormat: '[[[%value%]]]'"></tokenlist>
+        </div>
+
+        <button type="submit">Submit</button>
+      </form>
+    </div>
+
+    <script>
+      ko.applyBindings(new ViewModel());
+    </script>
+
+  </body>
 
 </html>
