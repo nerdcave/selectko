@@ -36,6 +36,7 @@
     self.optionsValue = params.valueField;
     self.newValueFormat = params.newValueFormat;
     self.allowNew = params.allowNew == undefined ? true : params.allowNew;
+    self.placeholder = params.placeholder || '';
 
     if (params.tokens) {
       self.tokens = ko.observableArray(
@@ -59,25 +60,29 @@
     });
 
     self.autocompleteTokens = ko.computed(function() {
-      var text = this.tokenInput();
+      var text = self.tokenInput();
       var tokens = ko.utils.arrayFilter(self.tokens(), function(t) { return t.text.indexOf(text) > -1; });
       var substringToken = ko.utils.arrayFirst(tokens, function(t) { return t.text === text; });
       if (text !== '' && !substringToken && self.allowNew) {
         tokens.unshift(new Token(text, self.makeNewValue(text), { isNew: true, isPreview: true }));
       }
       if (tokens.length > 0) {
-        this.autocompleteIndex(tokens[0].isPreview && tokens.length > 1 ? 1 : 0);
+        self.autocompleteIndex(tokens[0].isPreview && tokens.length > 1 ? 1 : 0);
       } else {
-        this.hideAutocomplete();
+        self.hideAutocomplete();
       }
       return tokens;
-    }, self);
+    });
 
     self.isFocused.subscribe(function(focused) {
       if (focused === false) {
         self.hideAutocomplete();
         self.tokenInput('');
       }
+    });
+
+    self.inputSize = ko.pureComputed(function() {
+      return Math.max(self.tokenInput() === '' ? self.placeholder.length : self.tokenInput().length, 1);
     });
   }
 
@@ -191,7 +196,7 @@
           <!-- /ko -->\
           <li class="token-input">\
             <input type="text" tabindex="0" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"\
-              data-bind="textInput: tokenInput, click: onInputClick, event: { keydown: onKeyDown }, hasFocus: isFocused, attr: { size: 1 + tokenInput().length }">\
+              data-bind="textInput: tokenInput, click: onInputClick, event: { keydown: onKeyDown }, hasFocus: isFocused, attr: { size: inputSize, placeholder: placeholder }">\
           </li>\
         </ul>\
         <ul class="autocomplete" data-bind="visible: isAutocompleteVisible, foreach: autocompleteTokens">\
