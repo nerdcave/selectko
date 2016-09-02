@@ -1,0 +1,22 @@
+body {
+  background: #fcfcfc;
+  font-family: sans-serif;
+  color: #444;
+  padding: 1em;
+  height: 1000px;
+}
+
+#container { width: 50%; }
+div.field {
+  border-bottom: 1px dotted #ccc;
+  padding-bottom: 20px;
+  margin-top: 30px;
+}
+
+button {
+  font-size: 16px;
+  padding: 8px;
+  margin-top: 5px;
+  background: #4CAF50;
+  color: #fff;
+}

@@ -9,7 +9,6 @@
 } 
 
 .token-list {
-  font-family: sans-serif;
   box-sizing: border-box;
   border: 1px solid #aaa;
   background: #FFFFFF;
@@ -23,11 +22,10 @@ ul.token-list > li {
   float: left;
   display: inline-block;
   padding: 3px 6px 5px 5px;
-  border: 1px solid #B3B6ED;
+  border: 1px solid darkgray;
   margin: 5px 5px 0 0;
-  background: #C6E0F5;
+  background-color: lightgray;
   border-radius: 4px;
-  font-size: 15px;
 }
 
 ul.token-list > li.token-input {
@@ -37,9 +35,9 @@ ul.token-list > li.token-input {
 }
 
 ul.token-list > li.token-input input {
+  font-size: 1em;
   outline: none;
   border: 0;
-  font-size: 1em;
   padding: 0; margin: 0;
   box-shadow: none;
 }
@@ -49,11 +47,7 @@ li.token a.token-close {
   cursor: pointer;
   font-weight: bold;
   font-size: 16px;
-  color: #898989;
-}
-
-li.token a.token-close:hover {
-  color: #222;
+  color: gray;
 }
 
 ul.autocomplete {
@@ -62,8 +56,8 @@ ul.autocomplete {
   width: 100%;
   list-style: none;
   padding: 0;
-  border: 1px solid #555;
-  background: #fff;
+  border: 1px solid gray;
+  background-color: white;
   padding: 0; margin: 0;
 }
 
@@ -72,15 +66,17 @@ ul.autocomplete li {
 }
 
 ul.autocomplete li.selected {
-  background: #ddd;
+  background-color: #ddd;
+  color: gray;
 }
 
 ul.autocomplete li.highlight {
-  background: #5897fb;
+  background-color: cornflowerblue;
+  color: white;
   cursor: pointer;
 }
 
-ul.autocomplete li.new-token {
+ul.autocomplete li.new-token-preview {
   font-style: italic;
 }
 

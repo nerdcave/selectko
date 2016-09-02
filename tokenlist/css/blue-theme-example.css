@@ -1,0 +1,20 @@
+/*
+ * Example tokenlist styling
+ */
+
+ul.autocomplete li.selected {
+  background-color: #ddd;
+}
+
+ul.autocomplete li.highlight {
+  background-color: cornflowerblue;
+  color: white;
+}
+
+li.token lia.token-close:hover {
+  color: #222;
+}
+
+ul.token-list > li {
+  background-color: #C6E0F5;
+}

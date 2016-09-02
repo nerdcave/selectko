@@ -195,7 +195,7 @@
           </li>\
         </ul>\
         <ul class="autocomplete" data-bind="visible: isAutocompleteVisible, foreach: autocompleteTokens">\
-          <li data-bind="css: { selected: $parent.isSelectedToken($data), highlight: $index() === $parent.autocompleteIndex(), \'new-token\': isPreview },\
+          <li data-bind="css: { selected: $parent.isSelectedToken($data), highlight: $index() === $parent.autocompleteIndex(), \'new-token-preview\': isPreview },\
             html: displayText($parent.tokenInput()),\
             click: $parent.addSelectedAutocompleteToken.bind($parent),\
             event: { mousedown: $parent.isFocused.bind($parent, true), mouseover: $parent.autocompleteIndex.bind($parent, $index()) }">\
