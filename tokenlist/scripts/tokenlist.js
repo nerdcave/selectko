@@ -1,5 +1,5 @@
 /*
- * tokenlist component for Knockout JS v1.0.0
+ * tokenlist component for Knockout JS v1.0.1
  * (c) Jay Elaraj - http://nerdcave.com
  */
 
@@ -120,7 +120,7 @@
       allow = !this.addFromInput() && key !== KEYS.enter && key !== KEYS.comma;
     } else if (key === KEYS.backspace && this.tokenInput() === '' && this.selectedValues().length > 0) {
       var token = this.findTokenByValue(this.selectedValues().slice(-1)[0]);
-      if (this.unselectToken(token)) this.tokenInput(token.text);
+      if (this.unselectToken(token) && this.allowNew) this.tokenInput(token.text);
     } else {
       allow = true;
     }
