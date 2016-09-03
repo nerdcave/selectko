@@ -1,5 +1,5 @@
 /*
- * tokenlist component for Knockout JS v1.0.1
+ * tokenlist component for Knockout JS v1.0.3
  * (c) Jay Elaraj - http://nerdcave.com
  */
 
@@ -191,7 +191,7 @@
           <!-- ko foreach: selectedTokens -->\
           <li class="token">\
             <span data-bind="html: text"></span>\
-            <a class="token-close" data-bind="click: $parent.unselectToken.bind($parent)">&times;</a>\
+            <a class="token-close" data-bind="click: $parent.unselectToken.bind($parent), clickBubble: false">&times;</a>\
           </li>\
           <!-- /ko -->\
           <li class="token-input">\
