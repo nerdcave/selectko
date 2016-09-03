@@ -1,5 +1,5 @@
 /*
- * tokenlist component for Knockout JS v1.0.3
+ * tokenlist component for Knockout JS v1.0.4
  * (c) Jay Elaraj - http://nerdcave.com
  */
 
@@ -82,7 +82,10 @@
     });
 
     self.inputSize = ko.pureComputed(function() {
-      return Math.max(self.tokenInput() === '' ? self.placeholder.length : self.tokenInput().length, 1);
+      return Math.max(self.tokenInput() === '' ? self.inputPlaceholder().length : self.tokenInput().length, 1);
+    });
+    self.inputPlaceholder = ko.pureComputed(function() {
+      return self.selectedValues().length === 0 ? self.placeholder : "";
     });
   }
 
@@ -196,7 +199,7 @@
           <!-- /ko -->\
           <li class="token-input">\
             <input type="text" tabindex="0" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"\
-              data-bind="textInput: tokenInput, click: onInputClick, event: { keydown: onKeyDown }, hasFocus: isFocused, attr: { size: inputSize, placeholder: placeholder }">\
+              data-bind="textInput: tokenInput, click: onInputClick, event: { keydown: onKeyDown }, hasFocus: isFocused, attr: { size: inputSize, placeholder: inputPlaceholder }">\
           </li>\
         </ul>\
         <ul class="autocomplete" data-bind="visible: isAutocompleteVisible, foreach: autocompleteTokens">\
