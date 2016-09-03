@@ -1,5 +1,5 @@
 /*
- * tokenlist component for Knockout JS
+ * tokenlist component for Knockout JS v1.0.0
  * (c) Jay Elaraj - http://nerdcave.com
  */
 
@@ -51,7 +51,7 @@
       self.tokens = ko.observableArray();
     }
     self.autocompleteEnabled = self.tokens().length > 0;
- 
+
     self.selectedValues = params.selectedValues || ko.observableArray();
     self.selectedTokens = ko.pureComputed(function() {
       return ko.utils.arrayMap(self.selectedValues(), function(value) {
