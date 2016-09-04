@@ -1,5 +1,5 @@
 /*
- * tokenlist component for Knockout JS v1.0.6
+ * tokenlist component for Knockout JS v1.0.7
  * (c) Jay Elaraj - http://nerdcave.com
  */
 
@@ -38,6 +38,7 @@
     self.allowNew = params.allowNew === undefined ? true : params.allowNew;
     self.placeholder = params.placeholder || '';
     self.hideSelected = params.hideSelected === undefined ? false : params.hideSelected;
+    self.useStringInput  = params.useStringInput === undefined ? false : params.useStringInput;
 
     if (params.tokens) {
       self.tokens = ko.observableArray(
@@ -90,6 +91,9 @@
     });
     self.inputPlaceholder = ko.pureComputed(function() {
       return self.selectedValues().length === 0 ? self.placeholder : "";
+    });
+    self.stringInputValue = ko.pureComputed(function() {
+      return self.useStringInput ? self.selectedValues().join(',') : "";
     });
   }
 
@@ -189,12 +193,16 @@
     this.showAutocomplete();
   }
 
+  TokenListModel.prototype.isStringInputEnabled = function() {
+    return this.useStringInput || this.selectedValues().length === 0;
+  }
+
   ko.components.register('tokenlist', {
     viewModel: TokenListModel,
     template: '\
       <div class="tokenlist-wrapper">\
-        <select multiple data-bind="visible: false, attr: { name: name }, options: tokens, optionsText: \'text\', optionsValue:\'value\', selectedOptions: selectedValues"></select>\
-        <input type="hidden" value="" data-bind="attr: { name: name }, enable: selectedValues().length === 0">\
+        <select multiple data-bind="enable: !isStringInputEnabled(), visible: false, attr: { name: name }, options: tokens, optionsText: \'text\', optionsValue:\'value\', selectedOptions: selectedValues"></select>\
+        <input type="hidden" data-bind="enable: isStringInputEnabled(), attr: { name: name }, value: stringInputValue">\
         <ul class="token-list" data-bind="click: onInputClick">\
           <!-- ko foreach: selectedTokens -->\
           <li class="token">\
