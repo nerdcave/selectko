@@ -70,8 +70,11 @@ ul.autocomplete li.selected {
   cursor: default;
 }
 
-ul.autocomplete li.highlight:not(.selected) {
+ul.autocomplete li.highlight {
   background-color: cornflowerblue;
+}
+
+ul.autocomplete li.highlight:not(.selected) {
   color: white;
   cursor: pointer;
 }
