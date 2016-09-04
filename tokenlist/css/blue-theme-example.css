@@ -3,10 +3,10 @@
  */
 
 ul.autocomplete li.selected {
-  background-color: #ddd;
+  text-decoration: line-through;
 }
 
-ul.autocomplete li.highlight {
+ul.autocomplete li.highlight:not(.selected) {
   background-color: cornflowerblue;
   color: white;
 }

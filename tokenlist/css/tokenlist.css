@@ -66,11 +66,11 @@ ul.autocomplete li {
 }
 
 ul.autocomplete li.selected {
-  background-color: #ddd;
-  color: gray;
+  color: #bbb;
+  cursor: default;
 }
 
-ul.autocomplete li.highlight {
+ul.autocomplete li.highlight:not(.selected) {
   background-color: cornflowerblue;
   color: white;
   cursor: pointer;

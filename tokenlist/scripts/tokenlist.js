@@ -37,6 +37,7 @@
     self.newValueFormat = params.newValueFormat;
     self.allowNew = params.allowNew == undefined ? true : params.allowNew;
     self.placeholder = params.placeholder || '';
+    self.hideSelected = params.hideSelected == undefined ? false : params.hideSelected;
 
     if (params.tokens) {
       self.tokens = ko.observableArray(
@@ -60,8 +61,11 @@
     });
 
     self.autocompleteTokens = ko.computed(function() {
+      if (!self.autocompleteEnabled) return [];
       var text = self.tokenInput();
-      var tokens = ko.utils.arrayFilter(self.tokens(), function(t) { return t.text.indexOf(text) > -1; });
+      var tokens = ko.utils.arrayFilter(self.tokens(), function(t) {
+        return (!self.hideSelected || !self.isSelectedToken(t)) && t.text.indexOf(text) > -1;
+      });
       var substringToken = ko.utils.arrayFirst(tokens, function(t) { return t.text === text; });
       if (text !== '' && !substringToken && self.allowNew) {
         tokens.unshift(new Token(text, self.makeNewValue(text), { isNew: true, isPreview: true }));
