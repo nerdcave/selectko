@@ -1,5 +1,5 @@
 /*
- * tokenlist component for Knockout JS v1.0.4
+ * tokenlist component for Knockout JS v1.0.5
  * (c) Jay Elaraj - http://nerdcave.com
  */
 
@@ -190,6 +190,7 @@
     template: '\
       <div class="tokenlist-wrapper">\
         <select multiple data-bind="visible: false, attr: { name: name }, options: tokens, optionsText: \'text\', optionsValue:\'value\', selectedOptions: selectedValues"></select>\
+        <input type="hidden" value="" data-bind="attr: { name: name }, enable: selectedValues().length === 0">\
         <ul class="token-list" data-bind="click: onInputClick">\
           <!-- ko foreach: selectedTokens -->\
           <li class="token">\
