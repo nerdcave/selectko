@@ -1,5 +1,5 @@
 /*
- * tokenlist component for Knockout JS v1.0.5
+ * tokenlist component for Knockout JS v1.0.6
  * (c) Jay Elaraj - http://nerdcave.com
  */
 
@@ -35,9 +35,9 @@
     self.optionsText = params.textField;
     self.optionsValue = params.valueField;
     self.newValueFormat = params.newValueFormat;
-    self.allowNew = params.allowNew == undefined ? true : params.allowNew;
+    self.allowNew = params.allowNew === undefined ? true : params.allowNew;
     self.placeholder = params.placeholder || '';
-    self.hideSelected = params.hideSelected == undefined ? false : params.hideSelected;
+    self.hideSelected = params.hideSelected === undefined ? false : params.hideSelected;
 
     if (params.tokens) {
       self.tokens = ko.observableArray(
@@ -51,7 +51,7 @@
     } else {
       self.tokens = ko.observableArray();
     }
-    self.autocompleteEnabled = self.tokens().length > 0;
+    self.hasAutocomplete = params.hasAutocomplete === undefined ? self.tokens().length > 0 : params.hasAutocomplete;
 
     self.selectedValues = params.selectedValues || ko.observableArray();
     self.selectedTokens = ko.pureComputed(function() {
@@ -61,7 +61,7 @@
     });
 
     self.autocompleteTokens = ko.computed(function() {
-      if (!self.autocompleteEnabled) return [];
+      if (!self.hasAutocomplete) return [];
       var text = self.tokenInput();
       var tokens = ko.utils.arrayFilter(self.tokens(), function(t) {
         return (!self.hideSelected || !self.isSelectedToken(t)) && t.text.indexOf(text) > -1;
@@ -180,7 +180,7 @@
   }
 
   TokenListModel.prototype.showAutocomplete = function() {
-    if (!this.autocompleteEnabled) return;
+    if (!this.hasAutocomplete) return;
     this.isAutocompleteVisible(this.autocompleteTokens().length > 0);
   }
 
