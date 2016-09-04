@@ -21,6 +21,7 @@
         this.things = ko.observableArray(ko.utils.arrayMap(this.tokens(), function(name) { return new Thing(name); }));
         this.tags2SelectedValues = ko.observableArray([this.things()[4].name]);
         this.tags3SelectedValues = ko.observableArray([this.things()[1].id, this.things()[2].id]);
+        this.tags = ko.observableArray(['red', 'green', 'blue']);
       }
     </script>
 
@@ -38,11 +39,28 @@
           Simplest:
           <ul>
             <li>Type something then press <b>enter</b>, <b>tab</b>, or <b>comma</b> to add it.
-            <li>Press <b>backspace</b> or click the <b>&times;</b> to delete a token.</li>
+            <li>Press <b>backspace</b> or click the <b>&times;</b> to delete a tag.</li>
+            <li>Submits tags as multiple values by default.</li>
           </ul>
-          <tokenlist params="name: 'tags1[]', placeholder: 'type something!'"></tokenlist>
+          <tokenlist params="name: 'tags[]', placeholder: 'type something!'"></tokenlist>
+          <button type="submit">Submit</button>
         </div>
+      </form>
 
+      <form action="submit.html">
+        <div class="field">
+          Tags example:
+          <ul>
+            <li>Type something then press <b>enter</b>, <b>tab</b>, or <b>comma</b> to add it.
+            <li>Press <b>backspace</b> or click the <b>&times;</b> to delete a tag.</li>
+            <li>Submits tags as a comma-separated string.</li>
+          </ul>
+          <tokenlist params="name: 'tags1', selectedValues: tags, useStringInput: true"></tokenlist>
+          <button type="submit">Submit</button>
+        </div>
+      </form>
+
+      <form action="submit.html">
         <div class="field">
           Tokens as plain strings and disallow new entries:
           <ul>
@@ -53,8 +71,11 @@
             <li>Adding a new entry (not in the autocomplete) is disabled with param <b>allowNew: false</b>.</li>
           </ul>
           <tokenlist params="name: 'tags2[]', tokens: tokens, allowNew: false, selectedValues: tags2SelectedValues"></tokenlist>
+          <button type="submit">Submit</button>
         </div>
+      </form>
 
+      <form action="submit.html">
         <div class="field">
           Full features and tokens as objects:
           <ul>
@@ -63,9 +84,8 @@
             <li>New entry values formatted with <b>newValueFormat</b> option. Add new entries and press Submit to see results.</li>
           </ul>
           <tokenlist params="name: 'tags3[]', tokens: things, textField: 'name', valueField: 'id', selectedValues: tags3SelectedValues, newValueFormat: '[[[%value%]]]'"></tokenlist>
+          <button type="submit">Submit</button>
         </div>
-
-        <button type="submit">Submit</button>
       </form>
     </div>
 

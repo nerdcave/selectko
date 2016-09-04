@@ -1,5 +1,5 @@
 /*
- * tokenlist component for Knockout JS v1.0.7
+ * tokenlist component for Knockout JS v1.0.8
  * (c) Jay Elaraj - http://nerdcave.com
  */
 
@@ -39,20 +39,8 @@
     self.placeholder = params.placeholder || '';
     self.hideSelected = params.hideSelected === undefined ? false : params.hideSelected;
     self.useStringInput  = params.useStringInput === undefined ? false : params.useStringInput;
-
-    if (params.tokens) {
-      self.tokens = ko.observableArray(
-        ko.utils.arrayMap(params.tokens(), function(paramToken) { return self.createTokenFromParam(paramToken); })
-      );
-      params.tokens.subscribe(function(changes) {
-        for (var change of changes) {
-          if (change.status === 'added') self.tokens.push(self.createTokenFromParam(change.value));
-        }
-      }, null, 'arrayChange');
-    } else {
-      self.tokens = ko.observableArray();
-    }
-    self.hasAutocomplete = params.hasAutocomplete === undefined ? self.tokens().length > 0 : params.hasAutocomplete;
+    self.hasAutocomplete = params.hasAutocomplete === undefined ? true : params.hasAutocomplete;
+    self.stringInputSeparator = params.stringInputSeparator || ',';
 
     self.selectedValues = params.selectedValues || ko.observableArray();
     self.selectedTokens = ko.pureComputed(function() {
@@ -60,6 +48,20 @@
         return self.findTokenByValue(value)
       });
     });
+
+    if (params.tokens) {
+      var tokens = ko.utils.arrayMap(params.tokens(), function(paramToken) { return self.createTokenFromParam(paramToken); });
+      self.tokens = ko.observableArray(tokens);
+      params.tokens.subscribe(function(changes) {
+        for (var change of changes) {
+          if (change.status === 'added') self.tokens.push(self.createTokenFromParam(change.value));
+        }
+      }, null, 'arrayChange');
+    } else {
+      var tokens = ko.utils.arrayMap(self.selectedValues(), function(val) { return new Token(val, val); });
+      self.tokens = ko.observableArray(tokens);
+      self.hasAutocomplete = false;
+    }
 
     self.autocompleteTokens = ko.computed(function() {
       if (!self.hasAutocomplete) return [];
@@ -93,7 +95,7 @@
       return self.selectedValues().length === 0 ? self.placeholder : "";
     });
     self.stringInputValue = ko.pureComputed(function() {
-      return self.useStringInput ? self.selectedValues().join(',') : "";
+      return self.useStringInput ? self.selectedValues().join(self.stringInputSeparator) : "";
     });
   }
 

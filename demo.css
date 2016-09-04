@@ -3,10 +3,11 @@ body {
   font-family: sans-serif;
   color: #444;
   padding: 1em;
-  height: 1000px;
+  height: 1400px;
 }
 
 #container { width: 50%; }
+
 div.field {
   border-bottom: 1px dotted #ccc;
   padding-bottom: 20px;
@@ -16,7 +17,7 @@ div.field {
 button {
   font-size: 16px;
   padding: 8px;
-  margin-top: 5px;
+  margin-top: 10px;
   background: #4CAF50;
   color: #fff;
 }
