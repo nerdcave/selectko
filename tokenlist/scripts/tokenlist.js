@@ -1,5 +1,5 @@
 /*
- * tokenlist component for Knockout JS v1.0.8
+ * tokenlist component for Knockout JS v1.0.9
  * (c) Jay Elaraj - http://nerdcave.com
  */
 
@@ -123,10 +123,7 @@
     } else if (key === KEYS.down && !this.isAutocompleteVisible()) {
       this.showAutocomplete();
     } else if ((key === KEYS.up || key === KEYS.down) && this.isAutocompleteVisible()) {
-      var newIndex = this.autocompleteIndex() + (key === KEYS.up ? -1: 1), total = this.autocompleteTokens().length;
-      if (newIndex >= total) newIndex = 0;
-      if (newIndex <= -1) newIndex = total - 1;
-      this.autocompleteIndex(newIndex);
+      this.moveNextAutocompleteIndex(key === KEYS.up ? -1: 1);
     } else if (key === KEYS.enter && this.isAutocompleteVisible()) {
       this.addSelectedAutocompleteToken();
     } else if (key === KEYS.tab || key === KEYS.enter || (key === KEYS.comma && !event.shiftKey)) {
@@ -139,6 +136,16 @@
     }
     if (allow) this.showAutocomplete();
     return allow;
+  }
+
+  TokenListModel.prototype.moveNextAutocompleteIndex = function(dir) {
+    var index = this.autocompleteIndex(), total = this.autocompleteTokens().length, token = null;
+    do {
+      index += dir;
+      index = index >= total ? 0 : index <= -1 ? total - 1 : index;
+      token = this.autocompleteTokens()[index];
+    } while (index !== this.autocompleteIndex() && (!token || this.isSelectedToken(token)));
+    this.autocompleteIndex(index);
   }
 
   TokenListModel.prototype.addSelectedAutocompleteToken = function() {
