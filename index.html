@@ -34,9 +34,23 @@
     <h1>tokenlist component demo for knockout JS</h1>
 
     <div id="container">
+
       <form action="submit.html">
         <div class="field">
-          Simplest:
+          Single select with search:
+          <ul>
+            <li>Click to make a selection.</li>
+            <li>Click the <b>&times;</b> to delete selection.</li>
+            <li>Submits as a single string value.</li>
+          </ul>
+          <tokenlist params="name: 'single_select', isSingle: true, tokens: tokens, textField: 'text', valueField: 'id', placeholder: 'Select one...'"></tokenlist>
+          <button type="submit">Submit</button>
+        </div>
+      </form>
+
+      <form action="submit.html">
+        <div class="field">
+          Simple tags:
           <ul>
             <li>Type something then press <b>enter</b>, <b>tab</b>, or <b>comma</b> to add it.
             <li>Press <b>backspace</b> or click the <b>&times;</b> to delete a tag.</li>
@@ -49,7 +63,7 @@
 
       <form action="submit.html">
         <div class="field">
-          Tags example:
+          Tags as a string:
           <ul>
             <li>Type something then press <b>enter</b>, <b>tab</b>, or <b>comma</b> to add it.
             <li>Press <b>backspace</b> or click the <b>&times;</b> to delete a tag.</li>
@@ -68,7 +82,7 @@
             <li>For autocomplete filtering, type <b>ball</b>, for example.</li>
             <li>Press <b>enter</b> to select an autocomplete item.</li>
             <li>Press <b>up</b> or <b>escape</b> to close autocomplete. Press <b>down</b> to open autocomplete.</li>
-            <li>Adding a new entry (not in the autocomplete) is disabled with param <b>allowNew: false</b>.</li>
+            <li>Type <b>no</b> and observe adding new entries is disabled with param <b>allowNew: false</b>.</li>
           </ul>
           <tokenlist params="name: 'tags2[]', tokens: tokens, allowNew: false, selectedValues: tags2SelectedValues"></tokenlist>
           <button type="submit">Submit</button>

@@ -1,5 +1,5 @@
 /*
- * tokenlist component for Knockout JS v1.0.9
+ * tokenlist component for Knockout JS v1.1.0
  * (c) Jay Elaraj - http://nerdcave.com
  */
 
@@ -27,25 +27,29 @@
   var TokenListModel = function(params, container) {
     TokenListModel.KEYS = TokenListModel.KEYS || { up: 38, down: 40, enter: 13, tab: 9, backspace: 8, escape: 27, comma: 188 };
     var self = this;
-    self.name = params.name || 'tokens'
-    self.isAutocompleteVisible = ko.observable(false);
-    self.autocompleteIndex = ko.observable(0);
-    self.tokenInput = ko.observable('');
-    self.isFocused = ko.observable(false);
+    self.formFieldName = params.name || 'tokens';
     self.optionsText = params.textField;
     self.optionsValue = params.valueField;
     self.newValueFormat = params.newValueFormat;
+    self.isSingle = ko.observable(params.isSingle === undefined ? false : params.isSingle);
     self.allowNew = params.allowNew === undefined ? true : params.allowNew;
+    self.allowNew = self.allowNew && !self.isSingle();
     self.placeholder = params.placeholder || '';
     self.hideSelected = params.hideSelected === undefined ? false : params.hideSelected;
     self.useStringInput  = params.useStringInput === undefined ? false : params.useStringInput;
     self.hasAutocomplete = params.hasAutocomplete === undefined ? true : params.hasAutocomplete;
     self.stringInputSeparator = params.stringInputSeparator || ',';
+    self.noResultsText = params.noResultsText || 'No results found';
+
+    self.isAutocompleteVisible = ko.observable(false);
+    self.autocompleteIndex = ko.observable(0);
+    self.tokenInput = ko.observable('');
+    self.isFocused = ko.observable(false);
 
     self.selectedValues = params.selectedValues || ko.observableArray();
     self.selectedTokens = ko.pureComputed(function() {
       return ko.utils.arrayMap(self.selectedValues(), function(value) {
-        return self.findTokenByValue(value)
+        return self.findToken('value', value)
       });
     });
 
@@ -63,6 +67,10 @@
       self.hasAutocomplete = false;
     }
 
+    if (self.isSingle() && !self.placeholder) self.selectToken(self.tokens()[0]);
+
+    // pureComputed doesn't work
+    // test case: type token that doesn't exist; won't be selected immediately in autocomplete
     self.autocompleteTokens = ko.computed(function() {
       if (!self.hasAutocomplete) return [];
       var text = self.tokenInput();
@@ -72,11 +80,6 @@
       var substringToken = ko.utils.arrayFirst(tokens, function(t) { return t.text === text; });
       if (text !== '' && !substringToken && self.allowNew) {
         tokens.unshift(new Token(text, self.makeNewValue(text), { isNew: true, isPreview: true }));
-      }
-      if (tokens.length > 0) {
-        self.autocompleteIndex(tokens[0].isPreview && tokens.length > 1 ? 1 : 0);
-      } else {
-        self.hideAutocomplete();
       }
       return tokens;
     });
@@ -89,13 +92,28 @@
     });
 
     self.inputSize = ko.pureComputed(function() {
-      return Math.max(self.tokenInput() === '' ? self.inputPlaceholder().length : self.tokenInput().length, 1);
+      return Math.max(self.tokenInput() === '' ? self.inputPlaceholder().length : self.tokenInput().length, 1) + 1;
     });
+
     self.inputPlaceholder = ko.pureComputed(function() {
       return self.selectedValues().length === 0 ? self.placeholder : "";
     });
+
     self.stringInputValue = ko.pureComputed(function() {
       return self.useStringInput ? self.selectedValues().join(self.stringInputSeparator) : "";
+    });
+
+    self.singleText = ko.pureComputed(function() {
+      var valueToken = self.selectedTokens()[0];
+      return valueToken ? valueToken.text : self.placeholder;
+    });
+
+    self.tokenInput.subscribe(function() {
+      self.showAutocomplete();
+    });
+
+    self.isNoResultsVisible = ko.pureComputed(function() {
+      return !self.allowNew && self.autocompleteTokens().length === 0;
     });
   }
 
@@ -104,12 +122,8 @@
     return new Token(text, value);
   }
 
-  TokenListModel.prototype.findTokenByText = function(text) {
-    return ko.utils.arrayFirst(this.tokens(), function(t) { return t.text === text });
-  }
-
-  TokenListModel.prototype.findTokenByValue = function(value) {
-    return ko.utils.arrayFirst(this.tokens(), function(t) { return t.value === value });
+  TokenListModel.prototype.findToken = function(field, val) {
+    return ko.utils.arrayFirst(this.tokens(), function(t) { return t[field] === val });
   }
 
   TokenListModel.prototype.makeNewValue = function(value) {
@@ -123,22 +137,21 @@
     } else if (key === KEYS.down && !this.isAutocompleteVisible()) {
       this.showAutocomplete();
     } else if ((key === KEYS.up || key === KEYS.down) && this.isAutocompleteVisible()) {
-      this.moveNextAutocompleteIndex(key === KEYS.up ? -1: 1);
+      this.setNextAutocompleteIndex(key === KEYS.up ? -1: 1);
     } else if (key === KEYS.enter && this.isAutocompleteVisible()) {
       this.addSelectedAutocompleteToken();
     } else if (key === KEYS.tab || key === KEYS.enter || (key === KEYS.comma && !event.shiftKey)) {
       allow = !this.addFromInput() && key !== KEYS.enter && key !== KEYS.comma;
-    } else if (key === KEYS.backspace && this.tokenInput() === '' && this.selectedValues().length > 0) {
-      var token = this.findTokenByValue(this.selectedValues().slice(-1)[0]);
+    } else if (!this.isSingle() && key === KEYS.backspace && this.tokenInput() === '' && this.selectedValues().length > 0) {
+      var token = this.findToken('value', this.selectedValues().slice(-1)[0]);
       if (this.unselectToken(token) && this.allowNew) this.tokenInput(token.text);
     } else {
       allow = true;
     }
-    if (allow) this.showAutocomplete();
     return allow;
   }
 
-  TokenListModel.prototype.moveNextAutocompleteIndex = function(dir) {
+  TokenListModel.prototype.setNextAutocompleteIndex = function(dir) {
     var index = this.autocompleteIndex(), total = this.autocompleteTokens().length, token = null;
     do {
       index += dir;
@@ -150,7 +163,7 @@
 
   TokenListModel.prototype.addSelectedAutocompleteToken = function() {
     var token = this.autocompleteTokens()[this.autocompleteIndex()];
-    if (token.isPreview && !this.allowNew) return;
+    if (!token || (token.isPreview && !this.allowNew)) return;
     token.isPreview = false;
     this.selectToken(token);
     this.hideAutocomplete();
@@ -159,8 +172,12 @@
   TokenListModel.prototype.addFromInput = function() {
     var text = this.tokenInput().replace(/^\s+|\s+$/gm, '');
     if (text === '') return false;
-    var token = this.findTokenByText(text) || new Token(text, this.makeNewValue(text), { isNew: true });
+    var token = this.findToken('text', text) || new Token(text, this.makeNewValue(text), { isNew: true });
     return this.selectToken(token);
+  }
+
+  TokenListModel.prototype.isSelectedToken = function(token) {
+    return this.selectedValues().indexOf(token.value) > -1;
   }
 
   TokenListModel.prototype.selectToken = function(token) {
@@ -168,6 +185,7 @@
     if (token.isNew && !this.allowNew) return false;
 
     if (token.isNew) this.tokens.push(token);
+    if (this.isSingle()) this.unselectToken(this.selectedTokens()[0]);
     this.selectedValues.push(token.value);
     this.tokenInput('');
     this.hideAutocomplete();
@@ -175,62 +193,96 @@
     return true;
   }
 
-  TokenListModel.prototype.isSelectedToken = function(token) {
-    return this.selectedValues().indexOf(token.value) > -1;
-  }
-
   TokenListModel.prototype.unselectToken = function(token) {
+    if (!token) return false;
     this.selectedValues.remove(token.value);
     if (token.isNew) this.tokens.remove(token);
     this.hideAutocomplete();
-    this.isFocused(true);
+    if (!this.isSingle()) this.isFocused(true);
     return true;
   }
 
   TokenListModel.prototype.hideAutocomplete = function() {
-    this.autocompleteIndex(0);
+    if (this.isSingle()) this.isFocused(false);
     this.isAutocompleteVisible(false);
   }
 
   TokenListModel.prototype.showAutocomplete = function() {
     if (!this.hasAutocomplete) return;
-    this.isAutocompleteVisible(this.autocompleteTokens().length > 0);
+
+    var tokens = this.autocompleteTokens();
+    if (tokens.length > 0) {
+      var index = 0, self = this;
+      if (tokens[0].isPreview && tokens.length > 1) {
+        var token = ko.utils.arrayFirst(tokens, function(t) { return !t.isPreview && !self.isSelectedToken(t); });
+        if (token) index = tokens.indexOf(token);
+      }
+      this.autocompleteIndex(index);
+    }
+    this.isAutocompleteVisible(tokens.length > 0 || this.isNoResultsVisible());
   }
 
-  TokenListModel.prototype.onInputClick = function() {
-    this.isFocused(true);
-    this.showAutocomplete();
+  TokenListModel.prototype.toggleAutocomplete = function() {
+    if (this.isAutocompleteVisible()) {
+      this.hideAutocomplete()
+    } else {
+      this.showAutocomplete();
+      this.isFocused(true);
+    }
+  }
+
+  TokenListModel.prototype.isSingleClearVisible = function() {
+    return this.selectedTokens()[0] && this.placeholder;
   }
 
   TokenListModel.prototype.isStringInputEnabled = function() {
     return this.useStringInput || this.selectedValues().length === 0;
   }
 
+  TokenListModel.prototype.clearValue = function(vm, event) {
+    if (event.target.className === 'single-clear') {
+      this.unselectToken(this.selectedTokens()[0]);
+    }
+  }
+
   ko.components.register('tokenlist', {
     viewModel: TokenListModel,
     template: '\
-      <div class="tokenlist-wrapper">\
-        <select multiple data-bind="enable: !isStringInputEnabled(), visible: false, attr: { name: name }, options: tokens, optionsText: \'text\', optionsValue:\'value\', selectedOptions: selectedValues"></select>\
-        <input type="hidden" data-bind="enable: isStringInputEnabled(), attr: { name: name }, value: stringInputValue">\
-        <ul class="token-list" data-bind="click: onInputClick">\
-          <!-- ko foreach: selectedTokens -->\
+      <div class="tokenlist-wrapper" data-bind="event: { click: toggleAutocomplete, mousedown: function(){} }">\
+        <select multiple data-bind="enable: !isStringInputEnabled(), visible: false, attr: { name: formFieldName }, options: tokens, optionsText: \'text\', optionsValue:\'value\', selectedOptions: selectedValues"></select>\
+        <input type="hidden" data-bind="enable: isStringInputEnabled(), attr: { name: formFieldName }, value: stringInputValue">\
+      <!-- ko if: isSingle() -->\
+        <span class="single-text" data-bind="text: singleText, css: { placeholder: !selectedTokens()[0] }, event: { mousedown: function(){} }"></span>\
+        <span class="single-clear" data-bind="visible: isSingleClearVisible(), click: clearValue">&times;</span>\
+        <span class="single-arrow" data-bind="css: { \'arrow-up\': isAutocompleteVisible(), \'arrow-down\': !isAutocompleteVisible() }"></span>\
+      <!-- /ko -->\
+      <!-- ko ifnot: isSingle() -->\
+        <ul class="token-list", data-bind="event: { mousedown: function(){} }">\
+        <!-- ko foreach: selectedTokens -->\
           <li class="token">\
             <span data-bind="html: text"></span>\
             <a class="token-close" data-bind="click: $parent.unselectToken.bind($parent), clickBubble: false">&times;</a>\
           </li>\
-          <!-- /ko -->\
+        <!-- /ko -->\
           <li class="token-input">\
-            <input type="text" tabindex="0" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"\
-              data-bind="textInput: tokenInput, click: onInputClick, event: { keydown: onKeyDown }, hasFocus: isFocused, attr: { size: inputSize, placeholder: inputPlaceholder }">\
+            <input type="text" tabindex="0" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-bind="textInput: tokenInput, event: { keydown: onKeyDown }, hasFocus: isFocused, attr: { size: inputSize, placeholder: inputPlaceholder }">\
           </li>\
         </ul>\
-        <ul class="autocomplete" data-bind="visible: isAutocompleteVisible, foreach: autocompleteTokens">\
-          <li data-bind="css: { selected: $parent.isSelectedToken($data), highlight: $index() === $parent.autocompleteIndex(), \'new-token-preview\': isPreview },\
-            html: displayText($parent.tokenInput()),\
-            click: $parent.addSelectedAutocompleteToken.bind($parent),\
-            event: { mousedown: $parent.isFocused.bind($parent, true), mouseover: $parent.autocompleteIndex.bind($parent, $index()) }">\
-          </li>\
-        </ul>\
+      <!-- /ko -->\
+        <div class="autocomplete-wrapper" data-bind="visible: isAutocompleteVisible">\
+        <!-- ko if: isSingle() -->\
+          <span class="single-input-wrapper">\
+            <input type="text" tabindex="0" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-bind="textInput: tokenInput, event: { keydown: onKeyDown, click: function(){} }, clickBubble: false, hasFocus: isFocused">\
+          </span>\
+        <!-- /ko -->\
+          <span class="no-results-message" data-bind="visible: isNoResultsVisible, text: noResultsText"></span>\
+          <ul class="autocomplete" data-bind="foreach: autocompleteTokens">\
+            <li data-bind="css: { selected: $parent.isSelectedToken($data), highlight: $index() === $parent.autocompleteIndex(), \'new-token-preview\': isPreview },\
+              html: displayText($parent.tokenInput()), click: $parent.addSelectedAutocompleteToken.bind($parent), clickBubble: false,\
+              event: { mousedown: $parent.isFocused.bind($parent, true), mouseover: $parent.autocompleteIndex.bind($parent, $index()) }">\
+            </li>\
+          </ul>\
+        </div>\
       </div>\
     '
   });
