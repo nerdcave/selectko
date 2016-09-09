@@ -1,5 +1,5 @@
 /*
- * tokenlist component for Knockout JS v1.1.0
+ * tokenlist component for Knockout JS v1.1.1
  * (c) Jay Elaraj - http://nerdcave.com
  */
 
@@ -86,8 +86,8 @@
 
     self.isFocused.subscribe(function(focused) {
       if (focused === false) {
-        self.hideAutocomplete();
         self.tokenInput('');
+        self.hideAutocomplete();
       }
     });
 
@@ -139,7 +139,7 @@
     } else if ((key === KEYS.up || key === KEYS.down) && this.isAutocompleteVisible()) {
       this.setNextAutocompleteIndex(key === KEYS.up ? -1: 1);
     } else if (key === KEYS.enter && this.isAutocompleteVisible()) {
-      this.addSelectedAutocompleteToken();
+      if (this.addSelectedAutocompleteToken()) this.hideAutocomplete();
     } else if (key === KEYS.tab || key === KEYS.enter || (key === KEYS.comma && !event.shiftKey)) {
       allow = !this.addFromInput() && key !== KEYS.enter && key !== KEYS.comma;
     } else if (!this.isSingle() && key === KEYS.backspace && this.tokenInput() === '' && this.selectedValues().length > 0) {
@@ -163,10 +163,10 @@
 
   TokenListModel.prototype.addSelectedAutocompleteToken = function() {
     var token = this.autocompleteTokens()[this.autocompleteIndex()];
-    if (!token || (token.isPreview && !this.allowNew)) return;
+    if (!token || (token.isPreview && !this.allowNew)) return false;
     token.isPreview = false;
     this.selectToken(token);
-    this.hideAutocomplete();
+    return true;
   }
 
   TokenListModel.prototype.addFromInput = function() {
@@ -188,7 +188,6 @@
     if (this.isSingle()) this.unselectToken(this.selectedTokens()[0]);
     this.selectedValues.push(token.value);
     this.tokenInput('');
-    this.hideAutocomplete();
     this.isFocused(true);
     return true;
   }
@@ -197,8 +196,7 @@
     if (!token) return false;
     this.selectedValues.remove(token.value);
     if (token.isNew) this.tokens.remove(token);
-    this.hideAutocomplete();
-    if (!this.isSingle()) this.isFocused(true);
+    this.isFocused(true);
     return true;
   }
 
@@ -239,10 +237,8 @@
     return this.useStringInput || this.selectedValues().length === 0;
   }
 
-  TokenListModel.prototype.clearValue = function(vm, event) {
-    if (event.target.className === 'single-clear') {
-      this.unselectToken(this.selectedTokens()[0]);
-    }
+  TokenListModel.prototype.clearSingleValue = function() {
+    this.selectedValues.remove((this.selectedTokens()[0] || {}).value);
   }
 
   ko.components.register('tokenlist', {
@@ -252,12 +248,12 @@
         <select multiple data-bind="enable: !isStringInputEnabled(), visible: false, attr: { name: formFieldName }, options: tokens, optionsText: \'text\', optionsValue:\'value\', selectedOptions: selectedValues"></select>\
         <input type="hidden" data-bind="enable: isStringInputEnabled(), attr: { name: formFieldName }, value: stringInputValue">\
       <!-- ko if: isSingle() -->\
-        <span class="single-text" data-bind="text: singleText, css: { placeholder: !selectedTokens()[0] }, event: { mousedown: function(){} }"></span>\
-        <span class="single-clear" data-bind="visible: isSingleClearVisible(), click: clearValue">&times;</span>\
+        <span class="single-text" data-bind="text: singleText, css: { placeholder: !selectedTokens()[0] }"></span>\
+        <span class="single-clear" data-bind="visible: isSingleClearVisible(), click: clearSingleValue, clickBubble: false">&times;</span>\
         <span class="single-arrow" data-bind="css: { \'arrow-up\': isAutocompleteVisible(), \'arrow-down\': !isAutocompleteVisible() }"></span>\
       <!-- /ko -->\
       <!-- ko ifnot: isSingle() -->\
-        <ul class="token-list", data-bind="event: { mousedown: function(){} }">\
+        <ul class="token-list">\
         <!-- ko foreach: selectedTokens -->\
           <li class="token">\
             <span data-bind="html: text"></span>\
@@ -278,7 +274,7 @@
           <span class="no-results-message" data-bind="visible: isNoResultsVisible, text: noResultsText"></span>\
           <ul class="autocomplete" data-bind="foreach: autocompleteTokens">\
             <li data-bind="css: { selected: $parent.isSelectedToken($data), highlight: $index() === $parent.autocompleteIndex(), \'new-token-preview\': isPreview },\
-              html: displayText($parent.tokenInput()), click: $parent.addSelectedAutocompleteToken.bind($parent), clickBubble: false,\
+              html: displayText($parent.tokenInput()), click: $parent.addSelectedAutocompleteToken.bind($parent),\
               event: { mousedown: $parent.isFocused.bind($parent, true), mouseover: $parent.autocompleteIndex.bind($parent, $index()) }">\
             </li>\
           </ul>\
