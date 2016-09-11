@@ -1,5 +1,5 @@
-/*
- * tokenlist component for Knockout JS v1.2.0
+/* 
+ * tokenlist v1.2.1 for Knockout JS
  * (c) Jay Elaraj - http://nerdcave.com
  */
 
@@ -153,7 +153,7 @@
     } else if ((key === KEYS.up || key === KEYS.down) && this.isAutocompleteVisible()) {
       this.setNextAutocompleteIndex(key === KEYS.up ? -1: 1);
     } else if (key === KEYS.enter && this.isAutocompleteVisible()) {
-      if (this.addSelectedAutocompleteToken()) this.hideAutocomplete();
+      this.addSelectedAutocompleteToken();
     } else if (key === KEYS.tab || key === KEYS.enter || (key === KEYS.comma && !event.shiftKey)) {
       allow = !this.addFromInput() && key !== KEYS.enter && key !== KEYS.comma;
     } else if (!this.isSingle() && key === KEYS.backspace && this.tokenInput() === '' && this.selectedValues().length > 0) {
@@ -180,6 +180,7 @@
     if (!token || (token.isPreview && !this.allowNew)) return false;
     token.isPreview = false;
     this.selectToken(token);
+    this.hideAutocomplete();
     return true;
   }
 
@@ -261,12 +262,12 @@
   ko.components.register('tokenlist', {
     viewModel: TokenListModel,
     template: '\
-      <div class="tokenlist-wrapper" data-bind="event: { click: toggleAutocomplete, mousedown: function(){} }">\
+      <div class="tokenlist-wrapper" data-bind="event: { mousedown: toggleAutocomplete }">\
         <select multiple data-bind="enable: !isStringInputEnabled(), visible: false, attr: { name: formFieldName }, options: tokens, optionsText: \'text\', optionsValue:\'value\', selectedOptions: selectedValues"></select>\
         <input type="hidden" data-bind="enable: isStringInputEnabled(), attr: { name: formFieldName }, value: stringInputValue">\
       <!-- ko if: isSingle() -->\
         <span class="single-text" data-bind="text: singleText, css: { placeholder: !selectedTokens()[0] }"></span>\
-        <span class="single-clear" data-bind="visible: isSingleClearVisible(), click: clearSingleValue, clickBubble: false">&times;</span>\
+        <span class="single-clear" data-bind="visible: isSingleClearVisible(), click: clearSingleValue, event: { mousedown: function(){} }, mousedownBubble: false">&times;</span>\
         <span class="single-arrow" data-bind="css: { \'arrow-up\': isAutocompleteVisible(), \'arrow-down\': !isAutocompleteVisible() }"></span>\
       <!-- /ko -->\
       <!-- ko ifnot: isSingle() -->\
@@ -274,7 +275,7 @@
         <!-- ko foreach: selectedTokens -->\
           <li class="token">\
             <span data-bind="html: text"></span>\
-            <a class="token-close" data-bind="click: $parent.unselectToken.bind($parent), clickBubble: false">&times;</a>\
+            <a class="token-close" data-bind="click: $parent.unselectToken.bind($parent), event: { mousedown: function(){} }, mousedownBubble: false">&times;</a>\
           </li>\
         <!-- /ko -->\
           <li class="token-input">\
@@ -287,14 +288,14 @@
         <!-- ko if: isSingle() -->\
           <span class="single-input-wrapper">\
             <input type="text" tabindex="0" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"\
-                   data-bind="textInput: tokenInput, event: { keydown: onKeyDown, click: function(){} }, clickBubble: false, hasFocus: isFocused">\
+                   data-bind="textInput: tokenInput, event: { keydown: onKeyDown, mousedown: function(){} }, mousedownBubble: false, hasFocus: isFocused">\
           </span>\
         <!-- /ko -->\
           <span class="no-results-message" data-bind="visible: isNoResultsVisible, text: noResultsText"></span>\
           <ul class="autocomplete" data-bind="foreach: autocompleteTokens">\
             <li data-bind="css: { selected: $parent.isSelectedToken($data), highlight: $index() === $parent.autocompleteIndex(), \'new-token-preview\': isPreview },\
               html: displayText($parent.tokenInput()),\
-              event: { mouseup: $parent.addSelectedAutocompleteToken.bind($parent), mouseover: $parent.autocompleteIndex.bind($parent, $index()) }">\
+              event: { mouseup: $parent.addSelectedAutocompleteToken.bind($parent), mouseover: $parent.autocompleteIndex.bind($parent, $index()), mousedown: function(){} }, mousedownBubble: false">\
             </li>\
           </ul>\
         </div>\
