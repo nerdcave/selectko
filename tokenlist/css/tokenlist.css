@@ -64,13 +64,13 @@ li.token a.token-close {
 .single-arrow.arrow-down {
   border-color: gray transparent;
   border-style: solid;
-  border-width: 6px 5px 0px 5px;
+  border-width: 6px 4px 0px 4px;
 }
 
 .single-arrow.arrow-up {
   border-color: gray transparent;
   border-style: solid;
-  border-width: 0px 5px 6px 5px;
+  border-width: 0px 4px 6px 4px;
 }
 
 .tokenlist-wrapper > .single-text {
@@ -149,9 +149,8 @@ ul.autocomplete li.new-token-preview {
   font-style: italic;
 }
 
-ul.autocomplete span.autocomplete-search {
-  text-decoration: underline;
-  font-weight: bold;
+.autocomplete-search {
+  background-color: yellow;
 }
 
 .tokenlist-wrapper.single input {

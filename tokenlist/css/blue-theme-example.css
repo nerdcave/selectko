@@ -2,10 +2,6 @@
  * Example tokenlist styling
  */
 
-ul.autocomplete li.selected {
-  text-decoration: line-through;
-}
-
 ul.autocomplete li.highlight:not(.selected) {
   background-color: cornflowerblue;
   color: white;
@@ -18,3 +14,10 @@ li.token lia.token-close:hover {
 ul.token-list > li {
   background-color: #C6E0F5;
 }
+
+/*.tokenlist-wrapper > .single-clear {
+  background-color: #eee;
+  font-size: 16px;
+  padding: 0px 5px;
+  border-radius: 4px;
+}*/

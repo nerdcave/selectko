@@ -1,5 +1,5 @@
 /*
- * tokenlist component for Knockout JS v1.1.1
+ * tokenlist component for Knockout JS v1.2.0
  * (c) Jay Elaraj - http://nerdcave.com
  */
 
@@ -16,7 +16,7 @@
   Token.prototype.displayText = function(substring) {
     if (this.isPreview) return this.text;
     var parts = this.text.split(substring);
-    return parts.join("<span class='autocomplete-search'>" + substring + "</span>");
+    return parts.join("<mark class='autocomplete-search'>" + substring + "</mark>");
   }
 
   Token.prototype.toString = function() {
@@ -32,14 +32,16 @@
     self.optionsValue = params.valueField;
     self.newValueFormat = params.newValueFormat;
     self.isSingle = ko.observable(params.isSingle === undefined ? false : params.isSingle);
-    self.allowNew = params.allowNew === undefined ? true : params.allowNew;
-    self.allowNew = self.allowNew && !self.isSingle();
+    self.allowNew = (params.allowNew === undefined ? true : params.allowNew) && !self.isSingle();
     self.placeholder = params.placeholder || '';
     self.hideSelected = params.hideSelected === undefined ? false : params.hideSelected;
     self.useStringInput  = params.useStringInput === undefined ? false : params.useStringInput;
     self.hasAutocomplete = params.hasAutocomplete === undefined ? true : params.hasAutocomplete;
     self.stringInputSeparator = params.stringInputSeparator || ',';
     self.noResultsText = params.noResultsText || 'No results found';
+    self.allowClear = params.allowClear === undefined ? false : params.allowClear;
+    self.singleValue = params.value || ko.observable();
+    if (!ko.isObservable(self.singleValue)) throw Error("value param must be an observable.");
 
     self.isAutocompleteVisible = ko.observable(false);
     self.autocompleteIndex = ko.observable(0);
@@ -47,6 +49,7 @@
     self.isFocused = ko.observable(false);
 
     self.selectedValues = params.selectedValues || ko.observableArray();
+    if (!ko.isObservable(self.selectedValues)) throw Error("selectedValues param must be an observableArray.");
     self.selectedTokens = ko.pureComputed(function() {
       return ko.utils.arrayMap(self.selectedValues(), function(value) {
         return self.findToken('value', value)
@@ -54,6 +57,7 @@
     });
 
     if (params.tokens) {
+      if (!ko.isObservable(params.tokens)) throw Error("tokens param must be an observableArray.");
       var tokens = ko.utils.arrayMap(params.tokens(), function(paramToken) { return self.createTokenFromParam(paramToken); });
       self.tokens = ko.observableArray(tokens);
       params.tokens.subscribe(function(changes) {
@@ -67,7 +71,17 @@
       self.hasAutocomplete = false;
     }
 
-    if (self.isSingle() && !self.placeholder) self.selectToken(self.tokens()[0]);
+    if (self.isSingle()) {
+      if (self.singleValue()) {
+        self.selectedValues([self.singleValue()]);
+        self.singleValue.subscribe(function(val) {
+          // in case value observable is set outside component
+          if (val !== self.selectedValues()[0]) self.selectedValues([val]);
+        });
+      } else if (!self.placeholder) {
+        self.selectToken(self.tokens()[0]);
+      }
+    }
 
     // pureComputed doesn't work
     // test case: type token that doesn't exist; won't be selected immediately in autocomplete
@@ -185,8 +199,11 @@
     if (token.isNew && !this.allowNew) return false;
 
     if (token.isNew) this.tokens.push(token);
-    if (this.isSingle()) this.unselectToken(this.selectedTokens()[0]);
     this.selectedValues.push(token.value);
+    if (this.isSingle()) {
+      this.unselectToken(this.selectedTokens()[0]);
+      this.singleValue(token.value);
+    }
     this.tokenInput('');
     this.isFocused(true);
     return true;
@@ -230,7 +247,7 @@
   }
 
   TokenListModel.prototype.isSingleClearVisible = function() {
-    return this.selectedTokens()[0] && this.placeholder;
+    return this.allowClear && this.selectedTokens()[0] && this.placeholder;
   }
 
   TokenListModel.prototype.isStringInputEnabled = function() {
@@ -261,21 +278,23 @@
           </li>\
         <!-- /ko -->\
           <li class="token-input">\
-            <input type="text" tabindex="0" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-bind="textInput: tokenInput, event: { keydown: onKeyDown }, hasFocus: isFocused, attr: { size: inputSize, placeholder: inputPlaceholder }">\
+            <input type="text" tabindex="0" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"\
+                   data-bind="textInput: tokenInput, event: { keydown: onKeyDown }, hasFocus: isFocused, attr: { size: inputSize, placeholder: inputPlaceholder }">\
           </li>\
         </ul>\
       <!-- /ko -->\
         <div class="autocomplete-wrapper" data-bind="visible: isAutocompleteVisible">\
         <!-- ko if: isSingle() -->\
           <span class="single-input-wrapper">\
-            <input type="text" tabindex="0" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-bind="textInput: tokenInput, event: { keydown: onKeyDown, click: function(){} }, clickBubble: false, hasFocus: isFocused">\
+            <input type="text" tabindex="0" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"\
+                   data-bind="textInput: tokenInput, event: { keydown: onKeyDown, click: function(){} }, clickBubble: false, hasFocus: isFocused">\
           </span>\
         <!-- /ko -->\
           <span class="no-results-message" data-bind="visible: isNoResultsVisible, text: noResultsText"></span>\
           <ul class="autocomplete" data-bind="foreach: autocompleteTokens">\
             <li data-bind="css: { selected: $parent.isSelectedToken($data), highlight: $index() === $parent.autocompleteIndex(), \'new-token-preview\': isPreview },\
-              html: displayText($parent.tokenInput()), click: $parent.addSelectedAutocompleteToken.bind($parent),\
-              event: { mousedown: $parent.isFocused.bind($parent, true), mouseover: $parent.autocompleteIndex.bind($parent, $index()) }">\
+              html: displayText($parent.tokenInput()),\
+              event: { mouseup: $parent.addSelectedAutocompleteToken.bind($parent), mouseover: $parent.autocompleteIndex.bind($parent, $index()) }">\
             </li>\
           </ul>\
         </div>\
