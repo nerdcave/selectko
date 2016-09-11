@@ -1,5 +1,5 @@
 /* 
- * tokenlist v1.2.1 for Knockout JS
+ * tokenlist v1.2.2 for Knockout JS
  * (c) Jay Elaraj - http://nerdcave.com
  */
 

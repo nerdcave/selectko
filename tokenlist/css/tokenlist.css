@@ -125,6 +125,8 @@ li.token a.token-close {
 ul.autocomplete {
   list-style: none;
   padding: 0; margin: 0;
+  overflow: auto;
+  max-height: 200px;
 }
 
 ul.autocomplete li {
