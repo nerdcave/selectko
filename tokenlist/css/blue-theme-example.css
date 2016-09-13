@@ -15,9 +15,6 @@ ul.token-list > li {
   background-color: #C6E0F5;
 }
 
-/*.tokenlist-wrapper > .single-clear {
-  background-color: #eee;
-  font-size: 16px;
-  padding: 0px 5px;
-  border-radius: 4px;
-}*/
+ul.autocomplete {
+  max-height: 128px;
+}

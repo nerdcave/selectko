@@ -1,5 +1,5 @@
 /* 
- * tokenlist v1.2.2 for Knockout JS
+ * tokenlist v1.2.3 for Knockout JS
  * (c) Jay Elaraj - http://nerdcave.com
  */
 
@@ -14,7 +14,7 @@
   }
 
   Token.prototype.displayText = function(substring) {
-    if (this.isPreview) return this.text;
+    if (this.isPreview || !substring) return this.text;
     var parts = this.text.split(substring);
     return parts.join("<mark class='autocomplete-search'>" + substring + "</mark>");
   }
@@ -48,6 +48,7 @@
     self.tokenInput = ko.observable('');
     self.isFocused = ko.observable(false);
 
+    if (self.isSingle() && params.selectedValues) throw Error("Use value param instead of selectedValues when using isSingle.");
     self.selectedValues = params.selectedValues || ko.observableArray();
     if (!ko.isObservable(self.selectedValues)) throw Error("selectedValues param must be an observableArray.");
     self.selectedTokens = ko.pureComputed(function() {
@@ -151,7 +152,8 @@
     } else if (key === KEYS.down && !this.isAutocompleteVisible()) {
       this.showAutocomplete();
     } else if ((key === KEYS.up || key === KEYS.down) && this.isAutocompleteVisible()) {
-      this.setNextAutocompleteIndex(key === KEYS.up ? -1: 1);
+      var index = this.autocompleteIndex() + (key === KEYS.up ? -1: 1), total = this.autocompleteTokens().length;
+      this.autocompleteIndex(index >= total ? 0 : index <= -1 ? total - 1 : index);
     } else if (key === KEYS.enter && this.isAutocompleteVisible()) {
       this.addSelectedAutocompleteToken();
     } else if (key === KEYS.tab || key === KEYS.enter || (key === KEYS.comma && !event.shiftKey)) {
@@ -163,16 +165,6 @@
       allow = true;
     }
     return allow;
-  }
-
-  TokenListModel.prototype.setNextAutocompleteIndex = function(dir) {
-    var index = this.autocompleteIndex(), total = this.autocompleteTokens().length, token = null;
-    do {
-      index += dir;
-      index = index >= total ? 0 : index <= -1 ? total - 1 : index;
-      token = this.autocompleteTokens()[index];
-    } while (index !== this.autocompleteIndex() && (!token || this.isSelectedToken(token)));
-    this.autocompleteIndex(index);
   }
 
   TokenListModel.prototype.addSelectedAutocompleteToken = function() {
@@ -202,7 +194,7 @@
     if (token.isNew) this.tokens.push(token);
     this.selectedValues.push(token.value);
     if (this.isSingle()) {
-      this.unselectToken(this.selectedTokens()[0]);
+      if (this.selectedValues().length === 2) this.unselectToken(this.selectedTokens()[0]);
       this.singleValue(token.value);
     }
     this.tokenInput('');
@@ -259,6 +251,26 @@
     this.selectedValues.remove((this.selectedTokens()[0] || {}).value);
   }
 
+  ko.bindingHandlers.scrollIntoView = {
+    update: function(li, valueAccessor) {
+      if (ko.unwrap(valueAccessor()) === false) return;
+      var liRect = li.getBoundingClientRect(), elBottom = li.offsetTop + (liRect.bottom - liRect.top);
+      var ul = li.parentNode, ulRect = ul.getBoundingClientRect();
+      var totalHeight = ulRect.bottom - ulRect.top + ul.scrollTop;
+      if (li.offsetTop < ul.scrollTop) {
+        ul.scrollTop = li.offsetTop;
+      } else if (elBottom > totalHeight) {
+        ul.scrollTop += elBottom - totalHeight;
+      }
+    }
+  }
+
+  ko.bindingHandlers.resetScrollTop = {
+    update: function(ul, valueAccessor) {
+      if (ko.unwrap(valueAccessor())) ul.scrollTop = 0;
+    }
+  }
+
   ko.components.register('tokenlist', {
     viewModel: TokenListModel,
     template: '\
@@ -292,10 +304,11 @@
           </span>\
         <!-- /ko -->\
           <span class="no-results-message" data-bind="visible: isNoResultsVisible, text: noResultsText"></span>\
-          <ul class="autocomplete" data-bind="foreach: autocompleteTokens">\
+          <ul class="autocomplete" data-bind="foreach: autocompleteTokens, resetScrollTop: isAutocompleteVisible">\
             <li data-bind="css: { selected: $parent.isSelectedToken($data), highlight: $index() === $parent.autocompleteIndex(), \'new-token-preview\': isPreview },\
               html: displayText($parent.tokenInput()),\
-              event: { mouseup: $parent.addSelectedAutocompleteToken.bind($parent), mouseover: $parent.autocompleteIndex.bind($parent, $index()), mousedown: function(){} }, mousedownBubble: false">\
+              event: { mouseup: $parent.addSelectedAutocompleteToken.bind($parent), mouseover: $parent.autocompleteIndex.bind($parent, $index()), mousedown: function(){} }, mousedownBubble: false,\
+              scrollIntoView: $index() === $parent.autocompleteIndex()">\
             </li>\
           </ul>\
         </div>\
