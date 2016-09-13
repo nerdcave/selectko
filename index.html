@@ -42,6 +42,8 @@
           Single select with search:
           <ul>
             <li>Click to make a selection.</li>
+            <li>Press <b>escape</b> to close the list.</li>
+            <li>Type in search box to filter list.</li>
             <li>Submits as a single string value.</li>
           </ul>
           <tokenlist params="name: 'single_select', isSingle: true, tokens: tokens, value: singleValue"></tokenlist>
@@ -95,7 +97,7 @@
             <li>Plain string tokens (see source).</li>
             <li>For autocomplete filtering, type <b>ball</b>, for example.</li>
             <li>Press <b>enter</b> to select an autocomplete item.</li>
-            <li>Press <b>up</b> or <b>escape</b> to close autocomplete. Press <b>down</b> to open autocomplete.</li>
+            <li>Press <b>escape</b> to close autocomplete. Press <b>down</b> to open autocomplete.</li>
             <li>Type <b>no</b> and observe adding new entries is disabled with param <b>allowNew: false</b>.</li>
           </ul>
           <tokenlist params="name: 'tags2[]', tokens: tokens, allowNew: false, selectedValues: tags2SelectedValues"></tokenlist>

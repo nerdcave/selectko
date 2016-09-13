@@ -148,7 +148,7 @@
 
   TokenListModel.prototype.onKeyDown = function(data, event) {
     var allow = false, key = event.keyCode ? event.keyCode : event.which, KEYS = TokenListModel.KEYS;
-    if (key === KEYS.escape || (key === KEYS.up && this.isAutocompleteVisible() && this.autocompleteIndex() === 0)) {
+    if (key === KEYS.escape) {
       this.hideAutocomplete();
     } else if (key === KEYS.down && !this.isAutocompleteVisible()) {
       this.showAutocomplete();
