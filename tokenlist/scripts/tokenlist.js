@@ -1,5 +1,5 @@
 /* 
- * tokenlist v1.2.3 for Knockout JS
+ * tokenlist v1.2.4 for Knockout JS
  * (c) Jay Elaraj - http://nerdcave.com
  */
 
@@ -44,6 +44,7 @@
     if (!ko.isObservable(self.singleValue)) throw Error("value param must be an observable.");
 
     self.isAutocompleteVisible = ko.observable(false);
+    self.isAutocompleteBelow = ko.observable(true);
     self.autocompleteIndex = ko.observable(0);
     self.tokenInput = ko.observable('');
     self.isFocused = ko.observable(false);
@@ -251,23 +252,42 @@
     this.selectedValues.remove((this.selectedTokens()[0] || {}).value);
   }
 
+
   ko.bindingHandlers.scrollIntoView = {
     update: function(li, valueAccessor) {
       if (ko.unwrap(valueAccessor()) === false) return;
-      var liRect = li.getBoundingClientRect(), elBottom = li.offsetTop + (liRect.bottom - liRect.top);
+      var liRect = li.getBoundingClientRect(), liBottom = li.offsetTop + liRect.height;
       var ul = li.parentNode, ulRect = ul.getBoundingClientRect();
-      var totalHeight = ulRect.bottom - ulRect.top + ul.scrollTop;
+      var totalHeight = ulRect.height + ul.scrollTop;
       if (li.offsetTop < ul.scrollTop) {
         ul.scrollTop = li.offsetTop;
-      } else if (elBottom > totalHeight) {
-        ul.scrollTop += elBottom - totalHeight;
+      } else if (liBottom > totalHeight) {
+        ul.scrollTop += liBottom - totalHeight;
       }
     }
   }
 
   ko.bindingHandlers.resetScrollTop = {
     update: function(ul, valueAccessor) {
-      if (ko.unwrap(valueAccessor())) ul.scrollTop = 0;
+      if (ko.unwrap(valueAccessor()) === true) ul.scrollTop = 0;
+    }
+  }
+
+  ko.bindingHandlers.setTopPosition = {
+    update: function(el, valueAccessor, allBindings, viewModel, bindingContext) {
+      if (ko.unwrap(valueAccessor()) === false) {
+        el.style.bottom = null;
+      } else {
+        var rect = el.getBoundingClientRect(), wrapper = el.parentNode, vm = bindingContext.$rawData;
+        if (rect.top + rect.height < window.innerHeight) {
+          vm.isAutocompleteBelow(true);
+        } else {
+          var styles = getComputedStyle(wrapper);
+          var borderWidths = parseFloat(styles.getPropertyValue('border-top-width')) + parseFloat(styles.getPropertyValue('border-bottom-width'));
+          el.style.bottom = wrapper.getBoundingClientRect().height - borderWidths + 'px';
+          vm.isAutocompleteBelow(false);
+        }
+      }
     }
   }
 
@@ -296,7 +316,7 @@
           </li>\
         </ul>\
       <!-- /ko -->\
-        <div class="autocomplete-wrapper" data-bind="visible: isAutocompleteVisible">\
+        <div class="autocomplete-wrapper" data-bind="visible: isAutocompleteVisible, setTopPosition: isAutocompleteVisible, css: { \'autocomplete-below\': isAutocompleteBelow(), \'autocomplete-above\': !isAutocompleteBelow() }">\
         <!-- ko if: isSingle() -->\
           <span class="single-input-wrapper">\
             <input type="text" tabindex="0" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"\
