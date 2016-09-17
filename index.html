@@ -5,9 +5,9 @@
     <link rel="stylesheet" type="text/css" href="demo.css">
     <script type="text/javascript" src="vendor/knockout-3.4.0.js"></script>
 
-    <script type="text/javascript" src="tokenlist/scripts/tokenlist.js"></script>
-    <link rel="stylesheet" type="text/css" href="tokenlist/css/tokenlist.css">
-    <link rel="stylesheet" type="text/css" href="tokenlist/css/blue-theme-example.css">
+    <script type="text/javascript" src="selectko/scripts/selectko.js"></script>
+    <link rel="stylesheet" type="text/css" href="selectko/css/selectko.css">
+    <link rel="stylesheet" type="text/css" href="selectko/css/blue-theme-example.css">
 
 
     <script>
@@ -17,8 +17,8 @@
       }
 
       function ViewModel() {
-        this.tokens = ko.observableArray(['basketball', 'football', 'tennis', 'cricket', 'volleyball', 'soccer', 'table tennis']);
-        this.things = ko.observableArray(ko.utils.arrayMap(this.tokens(), function(name) { return new Thing(name); }));
+        this.options = ko.observableArray(['basketball', 'football', 'tennis', 'cricket', 'volleyball', 'soccer', 'table tennis']);
+        this.things = ko.observableArray(ko.utils.arrayMap(this.options(), function(name) { return new Thing(name); }));
         this.tags2SelectedValues = ko.observableArray([this.things()[4].name]);
         this.tags3SelectedValues = ko.observableArray([this.things()[1].id, this.things()[2].id]);
         this.tags = ko.observableArray(['red', 'green', 'blue']);
@@ -31,9 +31,9 @@
 
   <body>
     Demo and component by <a href="http://nerdcave.com">Jay Elaraj</a>.
-    Follow project on <a href="http://github.com/nerdcave/tokenlist">github</a>.
+    Follow project on <a href="http://github.com/nerdcave/selectko">github</a>.
 
-    <h1>tokenlist component demo for knockout JS</h1>
+    <h1>selectko component demo for knockout JS</h1>
 
     <div id="container">
 
@@ -41,12 +41,13 @@
         <div class="field">
           Single select with search:
           <ul>
-            <li>Click to make a selection.</li>
+            <li>Value param selected upon initialization.</li>
+            <li>Click (or mouse down and drag) to make a selection.</li>
             <li>Press <b>escape</b> to close the list.</li>
             <li>Type in search box to filter list.</li>
             <li>Submits as a single string value.</li>
           </ul>
-          <tokenlist params="name: 'single_select', isSingle: true, tokens: tokens, value: singleValue"></tokenlist>
+          <selectko params="name: 'single_select', isSingle: true, options: options, value: singleValue"></selectko>
           <button type="submit">Submit</button>
         </div>
       </form>
@@ -55,11 +56,10 @@
         <div class="field">
           Single select with objects and deselect:
           <ul>
-            <li>Click to make a selection.</li>
             <li>Click the <b>&times;</b> to delete selection.</li>
             <li>Submits as the selected object's id value.</li>
           </ul>
-          <tokenlist params="name: 'single_select', isSingle: true, tokens: things, textField: 'name', valueField: 'id', value: singleValueId, allowClear: true, placeholder: 'Select one...'"></tokenlist>
+          <selectko params="name: 'single_select', isSingle: true, options: things, textField: 'name', valueField: 'id', value: singleValueId, allowClear: true, placeholder: 'Select one...'"></selectko>
           <button type="submit">Submit</button>
         </div>
       </form>
@@ -69,10 +69,10 @@
           Simple tags:
           <ul>
             <li>Type something then press <b>enter</b>, <b>tab</b>, or <b>comma</b> to add it.
-            <li>Press <b>backspace</b> or click the <b>&times;</b> to delete a tag.</li>
-            <li>Submits tags as multiple values by default.</li>
+            <li>Press <b>backspace</b> or click the <b>&times;</b> to delete it.</li>
+            <li>Submits tags as multiple values (default).</li>
           </ul>
-          <tokenlist params="name: 'tags[]', placeholder: 'type something!'"></tokenlist>
+          <selectko params="name: 'tags[]', placeholder: 'type something!'"></selectko>
           <button type="submit">Submit</button>
         </div>
       </form>
@@ -81,39 +81,37 @@
         <div class="field">
           Tags as a string:
           <ul>
-            <li>Type something then press <b>enter</b>, <b>tab</b>, or <b>comma</b> to add it.
-            <li>Press <b>backspace</b> or click the <b>&times;</b> to delete a tag.</li>
             <li>Submits tags as a comma-separated string.</li>
           </ul>
-          <tokenlist params="name: 'tags1', selectedValues: tags, useStringInput: true"></tokenlist>
+          <selectko params="name: 'string_tags', selectedValues: tags, useStringInput: true"></selectko>
           <button type="submit">Submit</button>
         </div>
       </form>
 
       <form action="submit.html">
         <div class="field">
-          Tokens as plain strings and disallow new entries:
+          Options as plain strings and disallow new entries:
           <ul>
-            <li>Plain string tokens (see source).</li>
+            <li>Plain string options (see source).</li>
             <li>For autocomplete filtering, type <b>ball</b>, for example.</li>
-            <li>Press <b>enter</b> to select an autocomplete item.</li>
+            <li>Use arrow keys and press <b>enter</b> to select an autocomplete item.</li>
             <li>Press <b>escape</b> to close autocomplete. Press <b>down</b> to open autocomplete.</li>
-            <li>Type <b>no</b> and observe adding new entries is disabled with param <b>allowNew: false</b>.</li>
+            <li>Type <b>g</b> and observe you can't add an entry not in the list because of param <b>allowNew: false</b>.</li>
           </ul>
-          <tokenlist params="name: 'tags2[]', tokens: tokens, allowNew: false, selectedValues: tags2SelectedValues"></tokenlist>
+          <selectko params="name: 'options[]', options: options, allowNew: false, selectedValues: tags2SelectedValues"></selectko>
           <button type="submit">Submit</button>
         </div>
       </form>
 
       <form action="submit.html">
         <div class="field">
-          Full features and tokens as objects:
+          Options as objects:
           <ul>
-            <li>Tokens are JavaScript objects (see source).</li>
-            <li>New entries allowed - type something then press <b>enter</b>, <b>tab</b>, or <b>comma</b> to add it.</li>
-            <li>New entry values formatted with <b>newValueFormat</b> option. Add new entries and press Submit to see results.</li>
+            <li>Options are JavaScript objects (see source).</li>
+            <li>New entries allowed (default) - type something then press <b>enter</b>, <b>tab</b>, or <b>comma</b> to add it.</li>
+            <li>New entry values submitted with format specified by param <b>newValueFormat</b>.</li>
           </ul>
-          <tokenlist params="name: 'tags3[]', tokens: things, textField: 'name', valueField: 'id', selectedValues: tags3SelectedValues, newValueFormat: '[[[%value%]]]'"></tokenlist>
+          <selectko params="name: 'options[]', options: things, textField: 'name', valueField: 'id', selectedValues: tags3SelectedValues, newValueFormat: '[[[%value%]]]'"></selectko>
           <button type="submit">Submit</button>
         </div>
       </form>

@@ -1,4 +1,4 @@
-.tokenlist-wrapper {
+.selectko-wrapper {
   position: relative;
   border: 1px solid #aaa;
   background: #FFFFFF;
@@ -6,13 +6,13 @@
   cursor: pointer;
 }
 
-.token-list:after {
+.option-list:after {
   content: "";
   display: table;
   clear: both;
 }
 
-.token-list {
+.option-list {
   box-sizing: border-box;
   list-style: none;
   padding: 0;
@@ -20,7 +20,7 @@
   cursor: text;
 }
 
-ul.token-list > li {
+ul.option-list > li {
   float: left;
   display: inline-block;
   padding: 3px 6px 5px 5px;
@@ -31,13 +31,13 @@ ul.token-list > li {
   border-radius: 4px;
 }
 
-ul.token-list > li.token-input {
+ul.option-list > li.option-input {
   background: none;
   border: 0;
   padding-left: 0;
 }
 
-ul.token-list > li.token-input input {
+ul.option-list > li.option-input input {
   font-size: 1rem;
   outline: none;
   border: 0;
@@ -45,7 +45,7 @@ ul.token-list > li.token-input input {
   box-shadow: none;
 }
 
-li.token a.token-close {
+li.option a.option-close {
   margin-left: 3px;
   cursor: pointer;
   font-weight: bold;
@@ -53,7 +53,7 @@ li.token a.token-close {
   color: gray;
 }
 
-.tokenlist-wrapper > .single-arrow {
+.selectko-wrapper > .single-arrow {
   position: absolute;
   right: 10px;
   top: calc(50% - 3px);
@@ -73,24 +73,24 @@ li.token a.token-close {
   border-width: 0px 4px 6px 4px;
 }
 
-.tokenlist-wrapper > .single-text {
+.selectko-wrapper > .single-text {
   display: inline-block;
   padding: 0.5rem 0 0.5rem 0.5rem;
   cursor: pointer;
 }
 
-.tokenlist-wrapper > .single-text.placeholder {
+.selectko-wrapper > .single-text.placeholder {
   color: #aaa;
 }
 
-.tokenlist-wrapper > .single-clear {
+.selectko-wrapper > .single-clear {
   color: #aaa;
   cursor: pointer;
   font-size: 20px;
   margin-left: 5px;
 }
 
-.tokenlist-wrapper > .single-clear:hover {
+.selectko-wrapper > .single-clear:hover {
   color: #000;
 }
 
@@ -102,6 +102,13 @@ li.token a.token-close {
   width: 100%;
   border: 1px solid #aaa;
   background-color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  -webkit-box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.autocomplete-wrapper.autocomplete-above {
+  box-shadow: 0 -1px 4px rgba(0,0,0,0.2);
+  -webkit-box-shadow: 0 -1px 4px rgba(0,0,0,0.2);
 }
 
 .autocomplete-wrapper > .no-results-message {
@@ -148,7 +155,7 @@ ul.autocomplete li.highlight:not(.selected) {
   cursor: pointer;
 }
 
-ul.autocomplete li.new-token-preview {
+ul.autocomplete li.new-option-preview {
   font-style: italic;
 }
 
@@ -156,6 +163,6 @@ ul.autocomplete li.new-token-preview {
   background-color: yellow;
 }
 
-.tokenlist-wrapper.single input {
+.selectko-wrapper.single input {
   width: 100%;
 }

@@ -1,5 +1,5 @@
 /*
- * Example tokenlist styling
+ * Example selectko styling
  */
 
 ul.autocomplete li.highlight:not(.selected) {
@@ -7,11 +7,11 @@ ul.autocomplete li.highlight:not(.selected) {
   color: white;
 }
 
-li.token lia.token-close:hover {
+li.option li.option-close:hover {
   color: #222;
 }
 
-ul.token-list > li {
+ul.option-list > li {
   background-color: #C6E0F5;
 }
 
