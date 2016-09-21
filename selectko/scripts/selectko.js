@@ -1,5 +1,5 @@
 /* 
- * selectko v1.2.4 for Knockout JS
+ * selectko v1.2.5 for Knockout JS
  * (c) Jay Elaraj - http://nerdcave.com
  */
 
@@ -292,15 +292,47 @@
     }
   }
 
+  ko.bindingHandlers.cancelMousedown = {
+    init: function(el, valueAccessor, allBindings, viewModel, bindingContext) {
+      if (ko.unwrap(valueAccessor()) === false) return;
+      ko.applyBindingsToNode(el, { event: { mousedown: function(){} }, mousedownBubble: false }, bindingContext);
+    }
+  }
+
+  ko.bindingHandlers.autocompleteOption = {
+    init: function(el, valueAccessor, allBindings, viewModel, bindingContext) {
+      var parent = bindingContext.$parent, data = bindingContext.$data;
+      ko.applyBindingAccessorsToNode(el, {
+        css: function() {
+          return {
+            selected: parent.isSelectedOption(data),
+            'new-option-preview': data.isPreview,
+            highlight: valueAccessor()
+          };
+        },
+        scrollIntoView: function() { return valueAccessor(); },
+        html: function() { return data.displayText(parent.optionInput()) }
+      }, bindingContext);
+
+      ko.applyBindingsToNode(el, {
+        event: {
+          mouseup: parent.addSelectedAutocompleteOption.bind(parent),
+          mouseover: parent.autocompleteIndex.bind(parent, bindingContext.$index())
+        },
+        cancelMousedown: true
+      }, bindingContext);
+    },
+  }
+
   ko.components.register('selectko', {
     viewModel: SelectkoModel,
     template: '\
       <div class="selectko-wrapper" data-bind="event: { mousedown: toggleAutocomplete }">\
-        <select multiple data-bind="enable: !isStringInputEnabled(), visible: false, attr: { name: formFieldName }, options: options, optionsText: \'text\', optionsValue:\'value\', selectedOptions: selectedValues"></select>\
+        <select multiple data-bind="disable: isStringInputEnabled(), visible: false, attr: { name: formFieldName }, options: options, optionsText: \'text\', optionsValue:\'value\', selectedOptions: selectedValues"></select>\
         <input type="hidden" data-bind="enable: isStringInputEnabled(), attr: { name: formFieldName }, value: stringInputValue">\
       <!-- ko if: isSingle() -->\
-        <span class="single-text" data-bind="text: singleText, css: { placeholder: !selectedOptions()[0] }"></span>\
-        <span class="single-clear" data-bind="visible: isSingleClearVisible(), click: clearSingleValue, event: { mousedown: function(){} }, mousedownBubble: false">&times;</span>\
+        <span class="single-text" data-bind="text: singleText, css: { placeholder: !singleValue() }"></span>\
+        <span class="single-clear" data-bind="visible: isSingleClearVisible(), click: clearSingleValue, cancelMousedown: true">&times;</span>\
         <span class="single-arrow" data-bind="css: { \'arrow-up\': isAutocompleteVisible(), \'arrow-down\': !isAutocompleteVisible() }"></span>\
       <!-- /ko -->\
       <!-- ko ifnot: isSingle() -->\
@@ -308,7 +340,7 @@
         <!-- ko foreach: selectedOptions -->\
           <li class="option">\
             <span data-bind="html: text"></span>\
-            <a class="option-close" data-bind="click: $parent.unselectOption.bind($parent), event: { mousedown: function(){} }, mousedownBubble: false">&times;</a>\
+            <a class="option-close" data-bind="click: $parent.unselectOption.bind($parent), cancelMousedown: true">&times;</a>\
           </li>\
         <!-- /ko -->\
           <li class="option-input">\
@@ -321,16 +353,12 @@
         <!-- ko if: isSingle() -->\
           <span class="single-input-wrapper">\
             <input type="text" tabindex="0" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"\
-                   data-bind="textInput: optionInput, event: { keydown: onKeyDown, mousedown: function(){} }, mousedownBubble: false, hasFocus: isFocused">\
+                   data-bind="textInput: optionInput, event: { keydown: onKeyDown }, cancelMousedown: true, hasFocus: isFocused">\
           </span>\
         <!-- /ko -->\
           <span class="no-results-message" data-bind="visible: isNoResultsVisible, text: noResultsText"></span>\
           <ul class="autocomplete" data-bind="foreach: autocompleteOptions, resetScrollTop: isAutocompleteVisible">\
-            <li data-bind="css: { selected: $parent.isSelectedOption($data), highlight: $index() === $parent.autocompleteIndex(), \'new-option-preview\': isPreview },\
-              html: displayText($parent.optionInput()),\
-              event: { mouseup: $parent.addSelectedAutocompleteOption.bind($parent), mouseover: $parent.autocompleteIndex.bind($parent, $index()), mousedown: function(){} }, mousedownBubble: false,\
-              scrollIntoView: $index() === $parent.autocompleteIndex()">\
-            </li>\
+            <li data-bind="autocompleteOption: $index() === $parent.autocompleteIndex()"></li>\
           </ul>\
         </div>\
       </div>\
