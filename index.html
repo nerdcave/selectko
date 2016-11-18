@@ -22,7 +22,7 @@
         this.tags2SelectedValues = ko.observableArray([this.things()[4].name]);
         this.tags3SelectedValues = ko.observableArray([this.things()[1].id, this.things()[2].id]);
         this.tags = ko.observableArray(['red', 'green', 'blue']);
-        this.singleValue = ko.observable(this.things()[1].name);
+        this.singleValue = this.things()[1].name;
         this.singleValueId = ko.observable(this.things()[1].id);
       }
     </script>

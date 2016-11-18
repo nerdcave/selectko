@@ -5,24 +5,9 @@
 
 (function() {
 
-  var OptionItem = function(text, value, options) {
-    this.text = text;
-    this.value = value;
-    options = options || {};
-    this.isNew = !!options.isNew;
-    this.isPreview = !!options.isPreview;
+  function observableFromParam(param, isArray) {
+    return ko.isObservable(param) ? param : (!!isArray ? ko.observableArray(param) : ko.observable(param));
   }
-
-  OptionItem.prototype.displayText = function(substring) {
-    if (this.isPreview || !substring) return this.text;
-    var parts = this.text.split(substring);
-    return parts.join("<mark class='autocomplete-search'>" + substring + "</mark>");
-  }
-
-  OptionItem.prototype.toString = function() {
-    return this.text;
-  }
-
 
   var SelectkoModel = function(params, container) {
     SelectkoModel.KEYS = SelectkoModel.KEYS || { up: 38, down: 40, enter: 13, tab: 9, backspace: 8, escape: 27, comma: 188 };
@@ -40,8 +25,7 @@
     self.stringInputSeparator = params.stringInputSeparator || ',';
     self.noResultsText = params.noResultsText || 'No results found';
     self.allowClear = params.allowClear === undefined ? false : params.allowClear;
-    self.singleValue = params.value || ko.observable();
-    if (!ko.isObservable(self.singleValue)) throw Error("value param must be an observable.");
+    self.singleValue = observableFromParam(params.value);    
 
     self.isAutocompleteVisible = ko.observable(false);
     self.isAutocompleteBelow = ko.observable(true);
@@ -49,9 +33,8 @@
     self.optionInput = ko.observable('');
     self.isFocused = ko.observable(false);
 
-    if (self.isSingle() && params.selectedValues) throw Error("Use value param instead of selectedValues when using isSingle.");
-    self.selectedValues = params.selectedValues || ko.observableArray();
-    if (!ko.isObservable(self.selectedValues)) throw Error("selectedValues param must be an observableArray.");
+    if (self.isSingle() && params.selectedValues) throw Error("Use value param instead of selectedValues.");
+    self.selectedValues = observableFromParam(params.selectedValues, true);
     self.selectedOptions = ko.pureComputed(function() {
       return ko.utils.arrayMap(self.selectedValues(), function(value) {
         return self.findOption('value', value)
@@ -59,14 +42,8 @@
     });
 
     if (params.options) {
-      if (!ko.isObservable(params.options)) throw Error("options param must be an observableArray.");
-      var options = ko.utils.arrayMap(params.options(), function(paramOption) { return self.createOptionFromParam(paramOption); });
+      var options = ko.utils.arrayMap(ko.unwrap(params.options), function(option) { return self.createOptionFromParam(option); });
       self.options = ko.observableArray(options);
-      params.options.subscribe(function(changes) {
-        ko.utils.arrayForEach(changes, function(change) {
-          if (change.status === 'added') self.options.push(self.createOptionFromParam(change.value));
-        });
-      }, null, 'arrayChange');
     } else {
       var options = ko.utils.arrayMap(self.selectedValues(), function(val) { return new OptionItem(val, val); });
       self.options = ko.observableArray(options);
@@ -74,12 +51,8 @@
     }
 
     if (self.isSingle()) {
-      if (self.singleValue()) {
+      if (self.singleValue() && self.findOption('value', self.singleValue())) {
         self.selectedValues([self.singleValue()]);
-        self.singleValue.subscribe(function(val) {
-          // in case value observable is set outside component
-          if (val && val !== self.selectedValues()[0]) self.selectedValues([val]);
-        });
       } else if (!self.placeholder) {
         self.selectOption(self.options()[0]);
       }
@@ -101,7 +74,7 @@
     });
 
     self.isFocused.subscribe(function(focused) {
-      if (focused === false) {
+      if (!focused) {
         self.optionInput('');
         self.hideAutocomplete();
       }
@@ -251,6 +224,25 @@
   SelectkoModel.prototype.clearSingleValue = function() {
     this.selectedValues.remove((this.selectedOptions()[0] || {}).value);
     this.singleValue(null);
+  }
+
+
+  var OptionItem = function(text, value, options) {
+    this.text = text;
+    this.value = value;
+    options = options || {};
+    this.isNew = !!options.isNew;
+    this.isPreview = !!options.isPreview;
+  }
+
+  OptionItem.prototype.displayText = function(substring) {
+    if (this.isPreview || !substring) return this.text;
+    var parts = this.text.split(substring);
+    return parts.join("<mark class='autocomplete-search'>" + substring + "</mark>");
+  }
+
+  OptionItem.prototype.toString = function() {
+    return this.text;
   }
 
 
