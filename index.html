@@ -47,7 +47,7 @@
             <li>Type in search box to filter list.</li>
             <li>Submits as a single string value.</li>
           </ul>
-          <selectko params="name: 'single_select', isSingle: true, options: options, value: singleValue"></selectko>
+          <selectko params="name: 'single_select', options: options, selected: singleValue"></selectko>
           <button type="submit">Submit</button>
         </div>
       </form>
@@ -59,7 +59,7 @@
             <li>Click the <b>&times;</b> to delete selection.</li>
             <li>Submits as the selected object's id value.</li>
           </ul>
-          <selectko params="name: 'single_select', isSingle: true, options: things, textField: 'name', valueField: 'id', value: singleValueId, allowClear: true, placeholder: 'Select one...'"></selectko>
+          <selectko params="name: 'single_select', options: things, textField: 'name', valueField: 'id', selected: singleValueId, allowClear: true, placeholder: 'Select one...'"></selectko>
           <button type="submit">Submit</button>
         </div>
       </form>
@@ -72,7 +72,7 @@
             <li>Press <b>backspace</b> or click the <b>&times;</b> to delete it.</li>
             <li>Submits tags as multiple values (default).</li>
           </ul>
-          <selectko params="name: 'tags[]', placeholder: 'type something!'"></selectko>
+          <selectko params="name: 'tags[]', isMultiple: true, placeholder: 'type something!'"></selectko>
           <button type="submit">Submit</button>
         </div>
       </form>
@@ -83,7 +83,7 @@
           <ul>
             <li>Submits tags as a comma-separated string.</li>
           </ul>
-          <selectko params="name: 'string_tags', selectedValues: tags, useStringInput: true"></selectko>
+          <selectko params="name: 'string_tags', isMultiple: true, selected: tags, useStringInput: true"></selectko>
           <button type="submit">Submit</button>
         </div>
       </form>
@@ -98,7 +98,7 @@
             <li>Press <b>escape</b> to close autocomplete. Press <b>down</b> to open autocomplete.</li>
             <li>Type <b>g</b> and observe you can't add an entry not in the list because of param <b>allowNew: false</b>.</li>
           </ul>
-          <selectko params="name: 'options[]', options: options, allowNew: false, selectedValues: tags2SelectedValues"></selectko>
+          <selectko params="name: 'options[]', isMultiple: true, options: options, allowNew: false, selected: tags2SelectedValues"></selectko>
           <button type="submit">Submit</button>
         </div>
       </form>
@@ -111,7 +111,7 @@
             <li>New entries allowed (default) - type something then press <b>enter</b>, <b>tab</b>, or <b>comma</b> to add it.</li>
             <li>New entry values submitted with format specified by param <b>newValueFormat</b>.</li>
           </ul>
-          <selectko params="name: 'options[]', options: things, textField: 'name', valueField: 'id', selectedValues: tags3SelectedValues, newValueFormat: '[[[%value%]]]'"></selectko>
+          <selectko params="name: 'options[]', isMultiple: true, options: things, textField: 'name', valueField: 'id', selected: tags3SelectedValues, newValueFormat: '[[[%value%]]]'"></selectko>
           <button type="submit">Submit</button>
         </div>
       </form>

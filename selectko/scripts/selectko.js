@@ -1,117 +1,119 @@
 /* 
- * selectko v1.2.5 for Knockout JS
+ * selectko v1.3 for Knockout JS
  * (c) Jay Elaraj - http://nerdcave.com
  */
 
 (function() {
 
-  function observableFromParam(param, isArray) {
-    return ko.isObservable(param) ? param : (!!isArray ? ko.observableArray(param) : ko.observable(param));
-  }
-
   var SelectkoModel = function(params, container) {
-    SelectkoModel.KEYS = SelectkoModel.KEYS || { up: 38, down: 40, enter: 13, tab: 9, backspace: 8, escape: 27, comma: 188 };
-    var self = this;
-    self.formFieldName = params.name || 'items';
-    self.optionsText = params.textField;
-    self.optionsValue = params.valueField;
-    self.newValueFormat = params.newValueFormat;
-    self.isSingle = ko.observable(params.isSingle === undefined ? false : params.isSingle);
-    self.allowNew = (params.allowNew === undefined ? true : params.allowNew) && !self.isSingle();
-    self.placeholder = params.placeholder || '';
-    self.hideSelected = params.hideSelected === undefined ? false : params.hideSelected;
-    self.useStringInput  = params.useStringInput === undefined ? false : params.useStringInput;
-    self.hasAutocomplete = params.hasAutocomplete === undefined ? true : params.hasAutocomplete;
-    self.stringInputSeparator = params.stringInputSeparator || ',';
-    self.noResultsText = params.noResultsText || 'No results found';
-    self.allowClear = params.allowClear === undefined ? false : params.allowClear;
-    self.singleValue = observableFromParam(params.value);    
+    var vm = this;
+    vm.formFieldName = params.name || 'items';
+    vm.optionsText = params.textField;
+    vm.optionsValue = params.valueField;
+    vm.newValueFormat = params.newValueFormat;
+    vm.isMultiple = ko.observable(params.isMultiple === undefined ? false : params.isMultiple);
+    vm.allowNew = (params.allowNew === undefined ? true : params.allowNew) && vm.isMultiple();
+    vm.placeholder = params.placeholder || '';
+    vm.hideSelected = params.hideSelected === undefined ? false : params.hideSelected;
+    vm.useStringInput  = params.useStringInput === undefined ? false : params.useStringInput;
+    vm.hasAutocomplete = params.hasAutocomplete === undefined ? true : params.hasAutocomplete;
+    vm.stringInputSeparator = params.stringInputSeparator || ',';
+    vm.noResultsText = params.noResultsText || 'No results found';
+    vm.allowClear = params.allowClear === undefined ? false : params.allowClear;
+    vm.selectedValues = ko.observableArray([].concat(params.selected ? ko.unwrap(params.selected) : []));
 
-    self.isAutocompleteVisible = ko.observable(false);
-    self.isAutocompleteBelow = ko.observable(true);
-    self.autocompleteIndex = ko.observable(0);
-    self.optionInput = ko.observable('');
-    self.isFocused = ko.observable(false);
+    vm.isAutocompleteVisible = ko.observable(false);
+    vm.isAutocompleteBelow = ko.observable(true);
+    vm.autocompleteIndex = ko.observable(0);
+    vm.optionInput = ko.observable('');
+    vm.isFocused = ko.observable(false);
 
-    if (self.isSingle() && params.selectedValues) throw Error("Use value param instead of selectedValues.");
-    self.selectedValues = observableFromParam(params.selectedValues, true);
-    self.selectedOptions = ko.pureComputed(function() {
-      return ko.utils.arrayMap(self.selectedValues(), function(value) {
-        return self.findOption('value', value)
+    if (params.options) {
+      var options = ko.utils.arrayMap(ko.unwrap(params.options), function(paramOption) {
+        var text = paramOption[vm.optionsText] || paramOption, value = paramOption[vm.optionsValue] || paramOption;
+        return new OptionItem(text, value);
+      });
+      vm.options = ko.observableArray(options);
+    } else {
+      var options = ko.utils.arrayMap(vm.selectedValues(), function(val) { return new OptionItem(val, val); });
+      vm.options = ko.observableArray(options);
+      vm.hasAutocomplete = false;
+    }
+
+    vm.selectedOptions = ko.pureComputed(function() {
+      return ko.utils.arrayMap(vm.selectedValues(), function(value) {
+        return vm.findOptionBy('value', value)
       });
     });
 
-    if (params.options) {
-      var options = ko.utils.arrayMap(ko.unwrap(params.options), function(option) { return self.createOptionFromParam(option); });
-      self.options = ko.observableArray(options);
-    } else {
-      var options = ko.utils.arrayMap(self.selectedValues(), function(val) { return new OptionItem(val, val); });
-      self.options = ko.observableArray(options);
-      self.hasAutocomplete = false;
-    }
+    vm.selectedSingleOption = ko.pureComputed(function() {
+      return vm.selectedOptions()[0];
+    });
 
-    if (self.isSingle()) {
-      if (self.singleValue() && self.findOption('value', self.singleValue())) {
-        self.selectedValues([self.singleValue()]);
-      } else if (!self.placeholder) {
-        self.selectOption(self.options()[0]);
-      }
-    }
+    vm.singleText = ko.pureComputed(function() {
+      return (vm.selectedSingleOption() || {}).text || vm.placeholder;
+    });
 
-    // pureComputed doesn't work
-    // test case: type option that doesn't exist; won't be selected immediately in autocomplete
-    self.autocompleteOptions = ko.computed(function() {
-      if (!self.hasAutocomplete) return [];
-      var text = self.optionInput();
-      var options = ko.utils.arrayFilter(self.options(), function(t) {
-        return (!self.hideSelected || !self.isSelectedOption(t)) && t.text.indexOf(text) > -1;
+    vm.singleValue = ko.pureComputed(function() {
+      return (vm.selectedSingleOption() || {}).value;
+    });
+
+    vm.isSingleClearVisible = ko.pureComputed(function() {
+      return vm.allowClear && vm.singleValue() && vm.placeholder;
+    });
+
+    vm.inputSize = ko.pureComputed(function() {
+      return Math.max(vm.optionInput() === '' ? vm.inputPlaceholder().length : vm.optionInput().length, 1) + 1;
+    });
+
+    vm.inputPlaceholder = ko.pureComputed(function() {
+      return vm.selectedValues().length === 0 ? vm.placeholder : "";
+    });
+
+    vm.stringInputValue = ko.pureComputed(function() {
+      return vm.useStringInput ? vm.selectedValues().join(vm.stringInputSeparator) : "";
+    });
+
+    vm.isNoResultsVisible = ko.pureComputed(function() {
+      return !vm.allowNew && vm.autocompleteOptions().length === 0;
+    });
+
+    vm.autocompleteOptions = ko.computed(function() {
+      if (!vm.hasAutocomplete) return [];
+      var text = vm.optionInput();
+      var options = ko.utils.arrayFilter(vm.options(), function(t) {
+        return (!vm.hideSelected || !vm.isSelected(t)) && t.text.indexOf(text) >= 0;
       });
-      var substringOption = ko.utils.arrayFirst(options, function(t) { return t.text === text; });
-      if (text !== '' && !substringOption && self.allowNew) {
-        options.unshift(new OptionItem(text, self.makeNewValue(text), { isNew: true, isPreview: true }));
+      if (text !== '' && vm.allowNew) {
+        if (!substringOption) {
+          var substringOption = ko.utils.arrayFirst(options, function(t) { return t.text === text; });
+          options.unshift(new OptionItem(text, vm.makeNewValue(text), { isNew: true, isPreview: true }));
+        }
       }
       return options;
     });
 
-    self.isFocused.subscribe(function(focused) {
+    vm.optionInput.subscribe(function() {
+      vm.showAutocomplete();
+    });
+
+    vm.isFocused.subscribe(function(focused) {
       if (!focused) {
-        self.optionInput('');
-        self.hideAutocomplete();
+        vm.optionInput('');
+        vm.hideAutocomplete();
       }
     });
 
-    self.inputSize = ko.pureComputed(function() {
-      return Math.max(self.optionInput() === '' ? self.inputPlaceholder().length : self.optionInput().length, 1) + 1;
-    });
-
-    self.inputPlaceholder = ko.pureComputed(function() {
-      return self.selectedValues().length === 0 ? self.placeholder : "";
-    });
-
-    self.stringInputValue = ko.pureComputed(function() {
-      return self.useStringInput ? self.selectedValues().join(self.stringInputSeparator) : "";
-    });
-
-    self.singleText = ko.pureComputed(function() {
-      var valueOption = self.selectedOptions()[0];
-      return valueOption ? valueOption.text : self.placeholder;
-    });
-
-    self.optionInput.subscribe(function() {
-      self.showAutocomplete();
-    });
-
-    self.isNoResultsVisible = ko.pureComputed(function() {
-      return !self.allowNew && self.autocompleteOptions().length === 0;
-    });
+    if (!vm.isMultiple()) {
+      if (vm.singleValue() && vm.findOptionBy('value', vm.singleValue())) {
+        vm.selectedValues([vm.singleValue()]);
+      } else {
+        setTimeout(function() { vm.selectOption(vm.options()[0]); }, 0);
+      }
+    }
   }
 
-  SelectkoModel.prototype.createOptionFromParam = function(paramOption) {
-    var text = paramOption[this.optionsText] || paramOption, value = paramOption[this.optionsValue] || paramOption;
-    return new OptionItem(text, value);
-  }
-
-  SelectkoModel.prototype.findOption = function(field, val) {
+  SelectkoModel.prototype.findOptionBy = function(field, val) {
     return ko.utils.arrayFirst(this.options(), function(t) { return t[field] === val });
   }
 
@@ -129,11 +131,11 @@
       var index = this.autocompleteIndex() + (key === KEYS.up ? -1: 1), total = this.autocompleteOptions().length;
       this.autocompleteIndex(index >= total ? 0 : index <= -1 ? total - 1 : index);
     } else if (key === KEYS.enter && this.isAutocompleteVisible()) {
-      this.addSelectedAutocompleteOption();
+      this.selectAutocompleteOption();
     } else if (key === KEYS.tab || key === KEYS.enter || (key === KEYS.comma && !event.shiftKey)) {
       allow = !this.addFromInput() && key !== KEYS.enter && key !== KEYS.comma;
-    } else if (!this.isSingle() && key === KEYS.backspace && this.optionInput() === '' && this.selectedValues().length > 0) {
-      var option = this.findOption('value', this.selectedValues().slice(-1)[0]);
+    } else if (this.isMultiple() && key === KEYS.backspace && this.optionInput() === '' && this.selectedValues().length > 0) {
+      var option = this.findOptionBy('value', this.selectedValues().slice(-1)[0]);
       if (this.unselectOption(option) && this.allowNew) this.optionInput(option.text);
     } else {
       allow = true;
@@ -141,38 +143,32 @@
     return allow;
   }
 
-  SelectkoModel.prototype.addSelectedAutocompleteOption = function() {
+  SelectkoModel.prototype.selectAutocompleteOption = function() {
     var option = this.autocompleteOptions()[this.autocompleteIndex()];
     if (!option || (option.isPreview && !this.allowNew)) return false;
     option.isPreview = false;
-    this.selectOption(option);
-    this.hideAutocomplete();
-    return true;
+    return this.selectOption(option);
   }
 
   SelectkoModel.prototype.addFromInput = function() {
     var text = this.optionInput().replace(/^\s+|\s+$/gm, '');
     if (text === '') return false;
-    var option = this.findOption('text', text) || new OptionItem(text, this.makeNewValue(text), { isNew: true });
+    var option = this.findOptionBy('text', text) || new OptionItem(text, this.makeNewValue(text), { isNew: true });
     return this.selectOption(option);
   }
 
-  SelectkoModel.prototype.isSelectedOption = function(option) {
-    return this.selectedValues().indexOf(option.value) > -1;
+  SelectkoModel.prototype.isSelected = function(option) {
+    return this.selectedValues().indexOf(option.value) >= 0;
   }
 
   SelectkoModel.prototype.selectOption = function(option) {
-    if (this.selectedValues().indexOf(option.value) > -1) return false;
-    if (option.isNew && !this.allowNew) return false;
+    if (this.isSelected(option) || (option.isNew && !this.allowNew)) return false;
 
+    if (!this.isMultiple()) this.unselectOption(this.selectedSingleOption())
     if (option.isNew) this.options.push(option);
     this.selectedValues.push(option.value);
-    if (this.isSingle()) {
-      if (this.selectedValues().length === 2) this.unselectOption(this.selectedOptions()[0]);
-      this.singleValue(option.value);
-    }
     this.optionInput('');
-    this.isFocused(true);
+    this.hideAutocomplete();
     return true;
   }
 
@@ -180,12 +176,16 @@
     if (!option) return false;
     this.selectedValues.remove(option.value);
     if (option.isNew) this.options.remove(option);
-    this.isFocused(true);
     return true;
   }
 
+  SelectkoModel.prototype.removeSelectedOption = function(option) {
+    this.unselectOption(option)
+    this.showAutocomplete()
+    this.isFocused(true)
+  };
+
   SelectkoModel.prototype.hideAutocomplete = function() {
-    if (this.isSingle()) this.isFocused(false);
     this.isAutocompleteVisible(false);
   }
 
@@ -194,9 +194,9 @@
 
     var options = this.autocompleteOptions();
     if (options.length > 0) {
-      var index = 0, self = this;
+      var index = 0, vm = this;
       if (options[0].isPreview && options.length > 1) {
-        var option = ko.utils.arrayFirst(options, function(t) { return !t.isPreview && !self.isSelectedOption(t); });
+        var option = ko.utils.arrayFirst(options, function(t) { return !t.isPreview && !vm.isSelected(t); });
         if (option) index = options.indexOf(option);
       }
       this.autocompleteIndex(index);
@@ -213,19 +213,11 @@
     }
   }
 
-  SelectkoModel.prototype.isSingleClearVisible = function() {
-    return this.allowClear && this.selectedOptions()[0] && this.placeholder;
-  }
-
   SelectkoModel.prototype.isStringInputEnabled = function() {
     return this.useStringInput || this.selectedValues().length === 0;
   }
 
-  SelectkoModel.prototype.clearSingleValue = function() {
-    this.selectedValues.remove((this.selectedOptions()[0] || {}).value);
-    this.singleValue(null);
-  }
-
+  SelectkoModel.KEYS = SelectkoModel.KEYS || { up: 38, down: 40, enter: 13, tab: 9, backspace: 8, escape: 27, comma: 188 };
 
   var OptionItem = function(text, value, options) {
     this.text = text;
@@ -297,7 +289,7 @@
       ko.applyBindingAccessorsToNode(el, {
         css: function() {
           return {
-            selected: parent.isSelectedOption(data),
+            selected: parent.isSelected(data),
             'new-option-preview': data.isPreview,
             highlight: valueAccessor()
           };
@@ -308,7 +300,7 @@
 
       ko.applyBindingsToNode(el, {
         event: {
-          mouseup: parent.addSelectedAutocompleteOption.bind(parent),
+          mouseup: parent.selectAutocompleteOption.bind(parent),
           mouseover: parent.autocompleteIndex.bind(parent, bindingContext.$index())
         },
         cancelMousedown: true
@@ -322,17 +314,17 @@
       <div class="selectko-wrapper" data-bind="event: { mousedown: toggleAutocomplete }">\
         <select multiple data-bind="disable: isStringInputEnabled(), visible: false, attr: { name: formFieldName }, options: options, optionsText: \'text\', optionsValue:\'value\', selectedOptions: selectedValues"></select>\
         <input type="hidden" data-bind="enable: isStringInputEnabled(), attr: { name: formFieldName }, value: stringInputValue">\
-      <!-- ko if: isSingle() -->\
+      <!-- ko ifnot: isMultiple() -->\
         <span class="single-text" data-bind="text: singleText, css: { placeholder: !singleValue() }"></span>\
-        <span class="single-clear" data-bind="visible: isSingleClearVisible(), click: clearSingleValue, cancelMousedown: true">&times;</span>\
+        <span class="single-clear" data-bind="visible: isSingleClearVisible(), click: removeSelectedOption.bind($data, selectedSingleOption()), cancelMousedown: true">&times;</span>\
         <span class="single-arrow" data-bind="css: { \'arrow-up\': isAutocompleteVisible(), \'arrow-down\': !isAutocompleteVisible() }"></span>\
       <!-- /ko -->\
-      <!-- ko ifnot: isSingle() -->\
+      <!-- ko if: isMultiple() -->\
         <ul class="option-list">\
         <!-- ko foreach: selectedOptions -->\
           <li class="option">\
             <span data-bind="html: text"></span>\
-            <a class="option-close" data-bind="click: $parent.unselectOption.bind($parent), cancelMousedown: true">&times;</a>\
+            <a class="option-close" data-bind="click: $parent.removeSelectedOption.bind($parent, $data), cancelMousedown: true">&times;</a>\
           </li>\
         <!-- /ko -->\
           <li class="option-input">\
@@ -342,7 +334,7 @@
         </ul>\
       <!-- /ko -->\
         <div class="autocomplete-wrapper" data-bind="visible: isAutocompleteVisible, setTopPosition: isAutocompleteVisible, css: { \'autocomplete-below\': isAutocompleteBelow(), \'autocomplete-above\': !isAutocompleteBelow() }">\
-        <!-- ko if: isSingle() -->\
+        <!-- ko ifnot: isMultiple() -->\
           <span class="single-input-wrapper">\
             <input type="text" tabindex="0" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"\
                    data-bind="textInput: optionInput, event: { keydown: onKeyDown }, cancelMousedown: true, hasFocus: isFocused">\
