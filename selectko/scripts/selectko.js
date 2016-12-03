@@ -1,26 +1,25 @@
 /* 
- * selectko v1.3 for Knockout JS
+ * selectko v1.3.1 for Knockout JS
  * (c) Jay Elaraj - http://nerdcave.com
  */
 
 (function() {
 
   var SelectkoModel = function(params, container) {
-    var vm = this;
+    var vm = this, defaultBool = function(param, defaultVal) { return param === undefined ? defaultVal : param }
     vm.formFieldName = params.name || 'items';
     vm.optionsText = params.textField;
     vm.optionsValue = params.valueField;
     vm.newValueFormat = params.newValueFormat;
-    vm.isMultiple = ko.observable(params.isMultiple === undefined ? false : params.isMultiple);
-    vm.allowNew = (params.allowNew === undefined ? true : params.allowNew) && vm.isMultiple();
+    vm.isMultiple = defaultBool(params.isMultiple, false);
+    vm.allowNew = defaultBool(params.allowNew, true) && vm.isMultiple;
     vm.placeholder = params.placeholder || '';
-    vm.hideSelected = params.hideSelected === undefined ? false : params.hideSelected;
-    vm.useStringInput  = params.useStringInput === undefined ? false : params.useStringInput;
-    vm.hasAutocomplete = params.hasAutocomplete === undefined ? true : params.hasAutocomplete;
+    vm.hideSelected = defaultBool(params.hideSelected, false);
+    vm.useStringInput  = defaultBool(params.useStringInput, false);
+    vm.hasAutocomplete = defaultBool(params.hasAutocomplete, true) && params.options;
     vm.stringInputSeparator = params.stringInputSeparator || ',';
     vm.noResultsText = params.noResultsText || 'No results found';
-    vm.allowClear = params.allowClear === undefined ? false : params.allowClear;
-    vm.selectedValues = ko.observableArray([].concat(params.selected ? ko.unwrap(params.selected) : []));
+    vm.allowClear = defaultBool(params.allowClear, false);
 
     vm.isAutocompleteVisible = ko.observable(false);
     vm.isAutocompleteBelow = ko.observable(true);
@@ -28,18 +27,26 @@
     vm.optionInput = ko.observable('');
     vm.isFocused = ko.observable(false);
 
-    if (params.options) {
-      var options = ko.utils.arrayMap(ko.unwrap(params.options), function(paramOption) {
-        var text = paramOption[vm.optionsText] || paramOption, value = paramOption[vm.optionsValue] || paramOption;
-        return new OptionItem(text, value);
-      });
-      vm.options = ko.observableArray(options);
-    } else {
-      var options = ko.utils.arrayMap(vm.selectedValues(), function(val) { return new OptionItem(val, val); });
-      vm.options = ko.observableArray(options);
-      vm.hasAutocomplete = false;
+    var selectedValues = [].concat(ko.unwrap(params.selected) || []);
+    var options = ko.utils.arrayMap(ko.unwrap(params.options) || selectedValues, function(option) {
+      var text, value;
+      if (typeof option === 'object') {
+        text = option[vm.optionsText], value = option[vm.optionsValue];
+      } else {
+        text = option, value = option;
+      }
+      return new OptionItem(text, value);
+    });
+    vm.options = ko.observableArray(options);
+
+    vm.selectedValues = ko.observableArray(ko.utils.arrayFilter(selectedValues, function(value) {
+      return vm.findOptionBy('value', value);
+    }));
+    if (!vm.isMultiple && !vm.selectedValues()[0] && vm.options()[0]) {
+      vm.selectedValues().push(vm.options()[0].value);
     }
 
+    /* computed observables */
     vm.selectedOptions = ko.pureComputed(function() {
       return ko.utils.arrayMap(vm.selectedValues(), function(value) {
         return vm.findOptionBy('value', value)
@@ -93,6 +100,7 @@
       return options;
     });
 
+    /* subscribers */
     vm.optionInput.subscribe(function() {
       vm.showAutocomplete();
     });
@@ -103,14 +111,6 @@
         vm.hideAutocomplete();
       }
     });
-
-    if (!vm.isMultiple()) {
-      if (vm.singleValue() && vm.findOptionBy('value', vm.singleValue())) {
-        vm.selectedValues([vm.singleValue()]);
-      } else {
-        setTimeout(function() { vm.selectOption(vm.options()[0]); }, 0);
-      }
-    }
   }
 
   SelectkoModel.prototype.findOptionBy = function(field, val) {
@@ -134,7 +134,7 @@
       this.selectAutocompleteOption();
     } else if (key === KEYS.tab || key === KEYS.enter || (key === KEYS.comma && !event.shiftKey)) {
       allow = !this.addFromInput() && key !== KEYS.enter && key !== KEYS.comma;
-    } else if (this.isMultiple() && key === KEYS.backspace && this.optionInput() === '' && this.selectedValues().length > 0) {
+    } else if (this.isMultiple && key === KEYS.backspace && this.optionInput() === '' && this.selectedValues().length > 0) {
       var option = this.findOptionBy('value', this.selectedValues().slice(-1)[0]);
       if (this.unselectOption(option) && this.allowNew) this.optionInput(option.text);
     } else {
@@ -164,7 +164,7 @@
   SelectkoModel.prototype.selectOption = function(option) {
     if (this.isSelected(option) || (option.isNew && !this.allowNew)) return false;
 
-    if (!this.isMultiple()) this.unselectOption(this.selectedSingleOption())
+    if (!this.isMultiple) this.unselectOption(this.selectedSingleOption())
     if (option.isNew) this.options.push(option);
     this.selectedValues.push(option.value);
     this.optionInput('');
@@ -314,12 +314,12 @@
       <div class="selectko-wrapper" data-bind="event: { mousedown: toggleAutocomplete }">\
         <select multiple data-bind="disable: isStringInputEnabled(), visible: false, attr: { name: formFieldName }, options: options, optionsText: \'text\', optionsValue:\'value\', selectedOptions: selectedValues"></select>\
         <input type="hidden" data-bind="enable: isStringInputEnabled(), attr: { name: formFieldName }, value: stringInputValue">\
-      <!-- ko ifnot: isMultiple() -->\
+      <!-- ko ifnot: isMultiple -->\
         <span class="single-text" data-bind="text: singleText, css: { placeholder: !singleValue() }"></span>\
         <span class="single-clear" data-bind="visible: isSingleClearVisible(), click: removeSelectedOption.bind($data, selectedSingleOption()), cancelMousedown: true">&times;</span>\
         <span class="single-arrow" data-bind="css: { \'arrow-up\': isAutocompleteVisible(), \'arrow-down\': !isAutocompleteVisible() }"></span>\
       <!-- /ko -->\
-      <!-- ko if: isMultiple() -->\
+      <!-- ko if: isMultiple -->\
         <ul class="option-list">\
         <!-- ko foreach: selectedOptions -->\
           <li class="option">\
@@ -334,7 +334,7 @@
         </ul>\
       <!-- /ko -->\
         <div class="autocomplete-wrapper" data-bind="visible: isAutocompleteVisible, setTopPosition: isAutocompleteVisible, css: { \'autocomplete-below\': isAutocompleteBelow(), \'autocomplete-above\': !isAutocompleteBelow() }">\
-        <!-- ko ifnot: isMultiple() -->\
+        <!-- ko ifnot: isMultiple -->\
           <span class="single-input-wrapper">\
             <input type="text" tabindex="0" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"\
                    data-bind="textInput: optionInput, event: { keydown: onKeyDown }, cancelMousedown: true, hasFocus: isFocused">\
