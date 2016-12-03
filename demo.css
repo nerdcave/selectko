@@ -20,3 +20,12 @@ button {
   background: #4CAF50;
   color: #fff;
 }
+
+.code {
+  background: #f1f1f1;
+  font-size: 14px;
+  padding: 5px;
+  margin-bottom: 20px;
+  white-space: pre-wrap;
+  color: #555;
+}

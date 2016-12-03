@@ -41,13 +41,16 @@
         <div class="field">
           Single select with search:
           <ul>
-            <li>Value param selected upon initialization.</li>
             <li>Click (or mouse down and drag) to make a selection.</li>
             <li>Press <b>escape</b> to close the list.</li>
             <li>Type in search box to filter list.</li>
+            <li>No selected param specified, so defaults to first option.</li>
             <li>Submits as a single string value.</li>
           </ul>
-          <selectko params="name: 'single_select', options: options, selected: singleValue"></selectko>
+
+          <xmp class="code"><selectko params="name: 'single_select', options: options"></selectko></xmp>
+
+          <selectko params="name: 'single_select', options: options"></selectko>
           <button type="submit">Submit</button>
         </div>
       </form>
@@ -56,9 +59,13 @@
         <div class="field">
           Single select with objects and deselect:
           <ul>
-            <li>Click the <b>&times;</b> to delete selection.</li>
+            <li>Value defaults to selected param.</li>
+            <li>Click the <b>&times;</b> to delete selection (enabled with allowClear and placeholder params).</li>
             <li>Submits as the selected object's id value.</li>
           </ul>
+
+          <xmp class="code"><selectko params="name: 'single_select', options: things, textField: 'name', valueField: 'id', selected: singleValueId, allowClear: true, placeholder: 'Select one...'"></selectko></xmp>
+
           <selectko params="name: 'single_select', options: things, textField: 'name', valueField: 'id', selected: singleValueId, allowClear: true, placeholder: 'Select one...'"></selectko>
           <button type="submit">Submit</button>
         </div>
@@ -72,6 +79,9 @@
             <li>Press <b>backspace</b> or click the <b>&times;</b> to delete it.</li>
             <li>Submits tags as multiple values (default).</li>
           </ul>
+
+          <xmp class="code"><selectko params="name: 'tags[]', isMultiple: true, placeholder: 'type something!'"></selectko></xmp>
+
           <selectko params="name: 'tags[]', isMultiple: true, placeholder: 'type something!'"></selectko>
           <button type="submit">Submit</button>
         </div>
@@ -83,6 +93,8 @@
           <ul>
             <li>Submits tags as a comma-separated string.</li>
           </ul>
+          <xmp class="code"><selectko params="name: 'string_tags', isMultiple: true, selected: tags, useStringInput: true"></selectko></xmp>
+
           <selectko params="name: 'string_tags', isMultiple: true, selected: tags, useStringInput: true"></selectko>
           <button type="submit">Submit</button>
         </div>
@@ -98,6 +110,8 @@
             <li>Press <b>escape</b> to close autocomplete. Press <b>down</b> to open autocomplete.</li>
             <li>Type <b>g</b> and observe you can't add an entry not in the list because of param <b>allowNew: false</b>.</li>
           </ul>
+          <xmp class="code"><selectko params="name: 'options[]', isMultiple: true, options: options, allowNew: false, selected: tags2SelectedValues"></selectko></xmp>
+
           <selectko params="name: 'options[]', isMultiple: true, options: options, allowNew: false, selected: tags2SelectedValues"></selectko>
           <button type="submit">Submit</button>
         </div>
@@ -111,6 +125,8 @@
             <li>New entries allowed (default) - type something then press <b>enter</b>, <b>tab</b>, or <b>comma</b> to add it.</li>
             <li>New entry values submitted with format specified by param <b>newValueFormat</b>.</li>
           </ul>
+          <xmp class="code"><selectko params="name: 'options[]', isMultiple: true, options: things, textField: 'name', valueField: 'id', selected: tags3SelectedValues, newValueFormat: '[[[%value%]]]'"></selectko></xmp>
+
           <selectko params="name: 'options[]', isMultiple: true, options: things, textField: 'name', valueField: 'id', selected: tags3SelectedValues, newValueFormat: '[[[%value%]]]'"></selectko>
           <button type="submit">Submit</button>
         </div>
